@@ -1,0 +1,83 @@
+﻿@model IEnumerable<PrayashStore.Models.Product>
+
+@{
+    ViewBag.Title = "Manage Products";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+
+<p>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fa fa-plus-circle"></i> Add New Product
+    </a>
+</p>
+
+@using (Html.BeginForm())
+{
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <div class="form-group">
+                @Html.Label("Category:", htmlAttributes: new { @class = "control-label" })
+                @Html.DropDownList("categoryName", new SelectList(ViewBag.Categories), "All", new { @class = "form-control ", id = "category-list" })
+            </div>
+        </div>
+        <div class="col-md-6 col-xs-12">
+            <div class="form-group">
+                @Html.Label("Gender:", htmlAttributes: new { @class = "control-label" })
+                @Html.DropDownList("gender", new SelectList(ViewBag.Genders), "All", new { @class = "form-control ", id = "gender-list" })
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (Model.Count() == 0)
+{
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">Product not found.</div>
+        </div>
+     </div>    
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-sm-6 col-md-3">
+            <div class="thumbnail img-crop">                
+                <img src="@Url.Action("GetProductThumbnail", "Image", new { id = item.Id })" alt="..." class="img-responsive" />
+            </div>
+
+            <div class="caption">
+                <p>@Html.DisplayFor(modelItem => item.Name)<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
+                <p>
+                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-primary">
+                        <i class="fa fa-pencil"></i> Edit
+                    </a>
+                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-default">
+                        <i class="fa fa-trash"></i> Delete
+                    </a>
+                </p>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Submit form when dropdown value is changed.
+            $('#category-list').on('change', function (event) {
+                var form = $(event.target).parents('form');
+                form.submit();
+            });
+            $('#gender-list').on('change', function (event) {
+                var form = $(event.target).parents('form');
+                form.submit();
+            });
+        });
+    </script>
+}
+

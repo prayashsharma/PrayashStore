@@ -1,0 +1,103 @@
+﻿@model IEnumerable<PrayashStore.Models.Category>
+
+@{
+    ViewBag.Title = "Manage Category";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+<p>    
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fa fa-plus-circle"></i> Add New Category
+    </a>
+</p>
+<table class="table table-striped">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Name)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.ActionLink(@Html.DisplayFor(modelItem => item.Name).ToString(),"Index", "Home", new {item.Id}, "" )
+            
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id = item.Id }, new { @class ="btn btn-primary" })                         
+            <a href="#" data-toggle="modal" data-id="@item.Id" data-category-name="@item.Name" data-target="#deleteCategoryModal" type="button" class="btn btn-default categoryDelete">Delete</a>
+        </td>
+    </tr>
+}
+
+</table>
+
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" role="dialog" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalHeaderTitleLabel1">Delete Category</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="deleteCategory">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts
+{
+    <script>
+        var categoryName = '';
+        var categoryId = '';
+        $(document).ready(function () {
+            $(document).on('show.bs.modal', '#deleteCategoryModal', function (e) {
+                categoryName = $(e.relatedTarget).data('category-name');
+                categoryId = $(e.relatedTarget).data('id');
+                $(this).find(".modal-body").html("Are you sure you want to delete category: <b>" + categoryName + "</b>?");
+
+            });
+            $('#deleteCategory').on('click', function (event) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "Category")',
+                    type: "POST",
+                    data: { __RequestVerificationToken: gettoken(), 'id': categoryId },
+                    dataType: 'json',
+                    success: function (result) {
+                        if (result.success) {
+                            $("#deleteCategoryModal .close").click()
+                            location.reload();
+                        }
+                        else {
+                            alert(result.message);
+                        }
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Status: " + textStatus + ", Error: " + errorThrown);
+                    }
+                });
+            });
+
+            // Function to return Anti Forgery Token
+            function gettoken() {
+                var token = '@Html.AntiForgeryToken()';
+                token = $(token).val();
+                return token;
+            }
+        });
+</script>
+}
+
+
+
+

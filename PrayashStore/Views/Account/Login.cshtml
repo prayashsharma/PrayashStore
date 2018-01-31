@@ -1,0 +1,49 @@
+﻿@using PrayashStore.ViewModels
+@model LoginViewModel
+@{
+    ViewBag.Title = "Log in";
+}
+
+<h3>@ViewBag.Title</h3>
+
+
+<br />
+
+@using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="form-group input-group-sm">
+        @Html.LabelFor(model => model.Email, htmlAttributes: new { @class = "control-label" })
+        @Html.TextBoxFor(model => model.Email, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group input-group-sm">
+        @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label" })        
+        @Html.PasswordFor(model => model.Password, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })        
+    </div>
+            
+    <div class="form-group">
+        <input type="submit" value="Log in" class="btn btn-primary btn-sm" />
+    </div>
+
+    <div class="form-group">
+        <div class="row">
+            <div class="col-xs-8">
+                <div style="padding-top:15px; font-size:85%">
+                    Don't have an account?
+                    <a href="@Url.Action("Register")">Register Here</a>                    
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div style="float:right;padding-top:15px; font-size:85%">                    
+                    <a href="@Url.Action("ForgotPassword")">Forgot your password?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}

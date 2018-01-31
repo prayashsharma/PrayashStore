@@ -1,0 +1,194 @@
+﻿@model PrayashStore.ViewModels.RolesIndexViewModel
+@{
+    ViewBag.Title = "Manage Roles";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+
+<p>
+    <a href="@Url.Action("Create", "Roles")" class="btn btn-primary">
+        <i class="fa fa-plus-circle" aria-hidden="true"></i> Create New Role
+    </a>
+    <a href="@Url.Action("AddRoleToUser", "Roles")" class="btn btn-primary">
+        <i class="fa fa-plus-circle" aria-hidden="true"></i> Add Role to User
+    </a>
+</p>
+
+<br />
+
+@using (Html.BeginForm())
+{
+    <div class="form-group">        
+        @Html.DropDownListFor(m => m.SelectedUserName, Model.UsersDropDownList, "All roles", new { @class = "form-control selected-user", id = "user-list" })
+
+    </div>
+}
+
+<div class="role-not-found-message" hidden>
+    <div class="alert alert-info" role="alert">Roles not found</div>
+</div>
+
+
+<div class="table-responsive role-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model.RoleNames)
+            {
+                <tr>
+                    <td>@role</td>
+                    <td>
+                        <a hidden href="#" data-toggle="modal" data-id="@role" data-target="#deleteRoleModal" class="roleDelete">Delete</a>
+                        <a hidden href="#" data-toggle="modal" data-id="@role" data-target="#removeRoleFomUserModal" class="roleRemoveFromUser">Delete Role for this User</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" role="dialog" aria-labelledby="deleteRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalHeaderTitleLabel1">Delete Role</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="deleteRole">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeRoleFomUserModal" tabindex="-1" role="dialog" aria-labelledby="removeRoleFomUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalHeaderTitleLabel2">Remove Role for User</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="removeRole">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        var roleName = '';
+        $(document).ready(function () {
+            var selectedUserName= $('#user-list :selected').val();
+            if (selectedUserName === "") {
+                $('.roleDelete').show();
+            }
+            else
+            {
+                $('.roleRemoveFromUser').show();
+            }
+
+            if (@Model.RoleNames.Count() == 0) {
+                $('.role-table').hide();
+                $('.role-not-found-message').show();
+            }
+
+            $(document).on('show.bs.modal', '#deleteRoleModal', function (e) {
+                roleName = $(e.relatedTarget).data('id');
+                $(this).find(".modal-body").html("Are you sure you want to delete role: <b>" + roleName + "</b>?");
+
+            });
+            $('#deleteRole').on('click', function (event) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "Roles")',
+                    type: "POST",
+                    data: { __RequestVerificationToken: gettoken(), 'RoleName': roleName },
+                    dataType: 'json',
+                    success: function (result) {
+                        if (result.success)
+                        {
+                            $("#deleteRoleModal .close").click()
+                            location.reload();
+                        }
+                        else
+                        {                            
+                            ShowToast(result.message, 2500, 'error');
+                        }
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {                        
+                        console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                        ShowToast("Error: Unable to remove this role.", 2500, 'error');
+
+                    }
+
+                });
+            });
+
+
+            $(document).on('show.bs.modal', '#removeRoleFomUserModal', function (e) {
+                roleName = $(e.relatedTarget).data('id');
+                $(this).find(".modal-body").html("Are you sure you want to remove role: <b>" + roleName + "</b> for user: <b>" + selectedUserName + "</b>?");
+
+            });
+            $('#removeRole').on('click', function (event) {
+                console.log("removeRole button clicked");
+                console.log("rolename=" + roleName);
+                console.log("user=" + selectedUserName);
+                $.ajax({
+                    url: '@Url.Action("DeleteRoleForUser", "Roles")',
+                    type: "POST",
+                    data: { __RequestVerificationToken: gettoken(), 'RoleName': roleName, 'UserName': selectedUserName},
+                    dataType: 'json',
+                    success: function (result) {
+                        if (result.success) {
+                            $("#removeRoleFomUserModal .close").click()
+                            location.reload();
+                        }
+                        else {
+                            ShowToast(result.message, 2500, 'error');
+                        }
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                        ShowToast("Error: Unable to remove role for this user.", 2500, 'error');
+                    }
+
+                });
+            });
+
+            // Submit form when dropdown value is changed.
+            $('#user-list').on('change', function (event) {
+                var form = $(event.target).parents('form');
+                form.submit();
+            });
+
+            // Function to return Anti Forgery Token
+            function gettoken() {
+                var token = '@Html.AntiForgeryToken()';
+                token = $(token).val();
+                return token;
+            }
+        });
+    </script>
+}

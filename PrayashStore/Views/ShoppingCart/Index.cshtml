@@ -1,0 +1,222 @@
+﻿@model PrayashStore.ViewModels.ShoppingCartViewModel
+@{
+    ViewBag.Title = "Shopping Cart";
+}
+
+
+<h3>Shopping Cart</h3>
+<br />
+
+<div class="shopping-cart-empty-message" hidden>
+    <div class="alert alert-info" role="alert">
+        Your shopping cart is empty.<br /><br />
+        <a href="@Url.Action("Index", "Home")" class="alert-link">Click here </a> to start shopping.
+    </div>
+</div>
+
+<div class="row shopping-cart-buttons">
+    <div class="col-md-2 pull-left">
+        <button type="button" id="empty-cart" class="btn btn-default">Empty Cart</button>
+    </div>
+    <div class="col-md-offset-8 pull-right">
+        <button id="check-out" type="button" class="btn btn-primary" onclick="location.href='@Url.Action("Address", "Checkout")'">Check Out</button>
+    </div>
+</div>
+
+<div class="table-responsive shopping-cart">
+    <table class="table shopping-cart-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Extended Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th></th>
+                <th><span class="double-underline"><strong>Total</strong></span></th>
+                <th></th>
+                <th></th>
+                <th id="cart-total"><span class="double-underline"><strong>$ @Model.CartTotal</strong></span></th>
+                <th></th>
+            </tr>
+        </tfoot>
+        <tbody>
+            @foreach (var item in Model.CartItems)
+            {
+                <tr id="row-@item.RecordId" class="cart-row-items">
+                    <td>
+                        <a href="@Url.Action("Details", "Home", new { id = item.ProductId })">
+                            <div class="shopping-cart-img-crop">
+                                <img src="@Url.Action("GetProductThumbnail", "Image", new { id = item.ProductId })" alt="@item.ProductId" class="img-responsive" />
+                            </div>
+                        </a>
+                    </td>
+                    <td>@item.Product.Name</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="...">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-default btn-sm minus-cart-qty" data-id="@item.RecordId"><i class="fa fa-minus"></i></button>
+                            </div>
+                            <div class="btn-group product-quantity" role="group">
+                                <input id="cart-qty-@item.RecordId" class="btn btn-default btn-sm" value=@item.Count type="button" />
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-default btn-sm plus-cart-qty" data-id="@item.ProductId"><i class="fa fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td id="product-unit-price" data-val="@item.Product.Price">$ @item.Product.Price</td>
+                    <td id="extended-price" data-val>$ @(item.Count * item.Product.Price)</td>
+                    <td>
+                        <a href="#" class="remove-item btn btn-default btn-sm" data-id="@item.RecordId">
+                            <i class="fa fa-trash-o fa-lg"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            if (@Model.CartCount == 0) {
+                $('.shopping-cart').hide();
+                $('.shopping-cart-buttons').hide();
+                $('.shopping-cart-empty-message').show();
+            }
+
+            $('#empty-cart').on('click', function (event) {
+                event.preventDefault();
+                var $this = $(this);
+                $.ajax({
+                    url: '@Url.Action("EmptyCart", "ShoppingCart")',
+                    type: "POST",
+                    dataType: 'json',
+                    success: function (result) {
+                        $('.cart-row-items').fadeOut('slow');
+                        UpdateCartViewData(result);
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Status: " + textStatus + ", Error: " + errorThrown);
+                    }
+                });
+
+                $this.blur();
+            });
+
+            $('.remove-item').on('click', function (event) {
+                event.preventDefault();
+                var $this = $(this);
+                var recordToDelete = $(this).attr("data-id");
+                if (recordToDelete !== '')
+                {
+                    $.ajax({
+                        url: '@Url.Action("RemoveMultipleItemsFromCart", "ShoppingCart")',
+                        type: "POST",
+                        data: { 'id': recordToDelete },
+                        dataType: 'json',
+                        success: function (result) {
+                            if (result.ItemCount === 0) {
+                                $('#row-' + result.DeleteId).fadeOut('slow');
+                            }
+                            else {
+                                $('#item-count-' + result.DeleteId).text(result.ItemCount);
+                            }
+                            UpdateCartViewData(result);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                            ShowToast("Error: Item could not be removed the cart", 2500, 'error');
+                        }
+                    });
+                }
+                $this.blur();
+            });
+
+            $('.plus-cart-qty').on('click', function (event) {
+                event.preventDefault();
+                var quantityElement = $(this).parent().siblings('.product-quantity').children('input');
+                var qty = quantityElement.val();
+                quantityElement.val(++qty);
+                var unitPrice = $(this).closest('td').parent().find('#product-unit-price').attr("data-val");
+                var extendedPrice = qty * unitPrice;
+                $(this).closest('td').parent().find('#extended-price').text('$ ' + extendedPrice.toFixed(2));
+
+                var recordToAdd = $(this).attr("data-id");
+                if (recordToAdd !== '') {
+                    $.ajax({
+                        url: '@Url.Action("AddToCart", "ShoppingCart")',
+                        type: "POST",
+                        data: { 'id': recordToAdd },
+                        dataType: 'json',
+                        success: function (result) {
+                            UpdateCartViewData(result);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                            ShowToast("Error: Item quantity could not be updated", 2500, 'error');
+                        }
+                    });
+                }
+                $(this).blur();
+            });
+
+            $('.minus-cart-qty').on('click', function (event) {
+                event.preventDefault();
+                var quantityElement = $(this).parent().siblings('.product-quantity').children('input');
+                var qty = quantityElement.val();
+                quantityElement.val(--qty);
+                var unitPrice = $(this).closest('td').parent().find('#product-unit-price').attr("data-val");
+                var extendedPrice = qty * unitPrice;
+                $(this).closest('td').parent().find('#extended-price').text('$ ' + extendedPrice.toFixed(2));
+
+                var recordToDelete = $(this).attr("data-id");
+                if (recordToDelete !== '') {
+                    $.ajax({
+                        url: '@Url.Action("RemoveItemFromCart", "ShoppingCart")',
+                        type: "POST",
+                        data: { 'id': recordToDelete },
+                        dataType: 'json',
+                        success: function (result) {
+                            if (result.ItemCount === 0) {
+                                $('#row-' + result.DeleteId).fadeOut('slow');
+                            }
+                            else {
+                                $('#item-count-' + result.DeleteId).text(result.ItemCount);
+                            }
+                            UpdateCartViewData(result);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                            ShowToast("Error: Item quantity could not be updated", 2500, 'error');
+                        }
+                    });
+                }
+                $(this).blur();
+            });
+
+            function UpdateCartViewData(result) {
+                $('#cart-total').text('$ ' + result.CartTotal);
+                $('#cart-status').html('Cart <span class="badge">' + result.CartCount + '</span>');
+                if (result.CartCount == 0)
+                {
+                    //$('#check-out').prop("disabled", true);
+                    //$('#empty-cart').prop("disabled", true);
+                    $('.shopping-cart').hide();
+                    $('.shopping-cart-buttons').hide();
+                    $('.shopping-cart-empty-message').show();
+                }
+                ShowToast(result.Message, 2500, 'success');
+            }
+        });
+    </script>
+}

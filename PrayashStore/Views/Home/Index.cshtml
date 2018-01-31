@@ -1,0 +1,66 @@
+﻿@model IEnumerable<PrayashStore.Models.Product>
+@{
+    ViewBag.Title = "Home Page";
+}
+
+@if (Model.Count() == 0)
+{
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">No products are found for this category.</div>
+        </div>
+    </div>
+}
+<div class="row">
+
+    @foreach (var item in Model)
+    {
+        <div class="col-sm-6 col-md-3">
+            <div class="thumbnail img-crop">
+                <a href="@Url.Action("Details", "Home", new {id = item.Id })">
+                    <img src="@Url.Action("GetProductThumbnail", "Image", new { id = item.Id })" alt="..." class="img-responsive" />
+                </a>
+            </div>
+
+            <div class="caption">     
+                <p>@Html.DisplayFor(modelItem => item.Name)<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
+                <p>
+                    <button type="button" class="add-to-cart btn btn-primary btn-block" data-id="@item.Id">
+                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Add To Cart
+                    </button>
+                </p>
+            </div>
+        </div>
+    }
+</div>
+
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $('.add-to-cart').on('click', function (event) {
+                event.preventDefault();
+                var recordToAdd = $(this).attr("data-id");
+                if (recordToAdd !== '') {
+                    $.ajax({
+                        url: '@Url.Action("AddToCart", "ShoppingCart")',
+                        type: "POST",
+                        data: { 'id': recordToAdd },
+                        dataType: 'json',
+                        success: function (result) {
+                            $('#cart-status').text('Cart ').append('<span class="badge">' + result.CartCount + '</span>');
+                            ShowToast(result.Message, 2500, 'success');
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Status:", textStatus, ",", "Error:", errorThrown);
+                            ShowToast("Error: Item could not be added to the cart", 2500, 'error');
+                        }
+                    });
+                }
+                $(this).blur();
+            });
+
+        });
+    </script>
+}
+

@@ -1,0 +1,46 @@
+﻿@model PrayashStore.ViewModels.RolesAndUsersDropDownViewModel
+@{
+    ViewBag.Title = "Add role to user";
+}
+
+<h3>@ViewBag.Title</h3>
+<br/>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">                
+                @Html.DropDownListFor(m => m.SelectedUserName, Model.Users, "Select a User...", new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.SelectedUserName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group">                
+                @Html.DropDownListFor(m => m.SelectedRoleName, Model.Roles, "Select a Role...", new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.SelectedRoleName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                @Html.ActionLink("Back to List", "Index")
+            </div>
+        </div>
+    </div>
+}
+

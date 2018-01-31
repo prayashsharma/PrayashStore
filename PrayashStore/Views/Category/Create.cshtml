@@ -1,0 +1,28 @@
+﻿@model PrayashStore.Models.Category
+
+@{
+    ViewBag.Title = "Add Category";
+}
+
+<h3>Add New Category</h3>
+<br/>
+
+@using (Html.BeginForm()) 
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label" })
+        @Html.TextBoxFor(model => model.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })        
+    </div>
+
+    <div class="form-group">        
+        <input type="submit" value="Create" class="btn btn-primary" />        
+    </div>    
+}
+
+<div>
+    @Html.ActionLink("Cancel and Go Back", "Index")
+</div>

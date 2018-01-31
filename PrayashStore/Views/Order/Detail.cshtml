@@ -1,0 +1,71 @@
+﻿@model IEnumerable<PrayashStore.Models.OrderDetail>
+
+@{
+    ViewBag.Title = "Order Details";  
+}
+
+
+@if (Model.Count() == 0)
+{
+    <h3>@ViewBag.Title</h3>
+    <br />
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">Order Not found.</div>
+        </div>
+    </div>
+}
+else
+{
+    <h3>Details for Order# @Model.First().OrderId</h3>
+    <br />
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-responsive table-condensed shopping-cart-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Extended Price</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th><span class="double-underline"><strong>Total</strong></span></th>
+                        <th></th>
+                        <th></th>
+                        <th><span class="double-underline"><strong> $ @Model.First().Order.Total</strong></span></th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@Url.Action("Details", "Home", new { id = item.ProductId })">
+                                    <div class="shopping-cart-img-crop">
+                                        <img src="@Url.Action("GetProductThumbnail", "Image", new { id = item.ProductId })" alt="@item.ProductId" class="img-responsive" />
+                                    </div>
+                                </a>
+                            </td>
+                            <td>@item.Product.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>$ @item.UnitPrice</td>
+                            <td>$ @(item.Quantity * item.UnitPrice)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div>    
+    <a href="@Request.UrlReferrer">Go Back</a>
+</div>
+
+
+

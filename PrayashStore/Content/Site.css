@@ -1,0 +1,200 @@
+﻿/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+.double-underline { border-bottom: 3px double; }
+
+.hide-element {
+  visibility: hidden;
+  position: absolute;
+}
+
+.vertical-resize {
+  resize: vertical; 
+}
+
+.clickable-row {
+    cursor: pointer;
+}
+
+
+/**************************/
+/***Bootstrap overrides***/
+/*************************/
+
+body {
+  font-size: 15px;
+  padding-top: 70px;
+}
+
+select, select.form-control {
+    /*padding-left: 1px;*/
+    font-size: 15px;
+}
+
+.dropdown-menu {
+    font-size: 15px;
+}
+textarea, textarea.form-control, input.form-control, input[type=text], input[type=password], input[type=email], input[type=number], [type=text].form-control, [type=password].form-control, [type=email].form-control, [type=tel].form-control, [contenteditable].form-control { 
+    font-size: 15px;
+    /*padding-left: 1px;*/
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 15px;
+}
+
+.col-left-no-padding {
+    padding-left: 0px;
+}
+
+.col-right-no-padding {
+    padding-right: 0px;
+}
+
+.col-top-padding {
+    padding-top: 15px;
+}
+
+.col-bottom-padding {
+    padding-bottom: 15px;
+}
+
+.payment-page-row {
+    margin-right: -45px;
+    margin-left: -30px;
+}
+
+.alert-info {
+    color: #666666;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}
+.alert a:not(.close):not(.btn), .alert .alert-link {
+    color: #2196f3;
+    font-weight: bold;
+}
+
+a.alert-link:hover {  
+  color: #2196f3;
+  font-size: larger;
+  line-height:18pt;
+}
+
+.panel-info > .panel-heading {
+    color: #2c3e50;    
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}
+
+.table-no-border > thead > tr > th,
+.table-no-border > tbody > tr > th,
+.table-no-border > tfoot > tr > th,
+.table-no-border > thead > tr > td,
+.table-no-border > tbody > tr > td,
+.table-no-border > tfoot > tr > td {
+    border-top: none;
+}
+
+.table-no-padding > thead > tr > th,
+.table-no-padding > tbody > tr > th,
+.table-no-padding > tfoot > tr > th,
+.table-no-padding > thead > tr > td,
+.table-no-padding > tbody > tr > td,
+.table-no-padding > tfoot > tr > td {
+    padding-bottom: 0px;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;    
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
+.img-crop {
+ height: 300px; 
+ overflow: hidden;
+}
+
+.img-crop img {
+   width:200px;
+   height:250px;
+/*Scale down will take the necessary specified space that is 100px x 100px without stretching the image*/
+    object-fit:scale-down;
+}
+
+.shopping-cart-img-crop {
+ height: 125px; 
+ overflow: hidden;
+}
+
+.shopping-cart-img-crop img {
+   width:75px;
+   height:125px;
+/*Scale down will take the necessary specified space without stretching the image*/
+    object-fit:scale-down;
+}
+
+.shopping-cart-table > thead > tr > th,
+.shopping-cart-table > tbody > tr > th,
+.shopping-cart-table > tfoot > tr > th,
+.shopping-cart-table > thead > tr > td,
+.shopping-cart-table > tbody > tr > td,
+.shopping-cart-table > tfoot > tr > td {
+    vertical-align: middle;
+}
+
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+
+
+/*bx slider css*/
+.bx-wrapper {
+    margin-bottom: 60px;
+    margin-top: 40px;
+}
+.bxslider li img {
+  display: block;
+  margin: 0 auto;
+}
+
+.bx-wrapper img {
+   width: 300px;
+   height: 380px;
+}
+
+@media screen and (max-width: 767px) {
+    .bx-wrapper img {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/** toastr override*/
+.toast-success {
+  background-color: #2196f3
+}

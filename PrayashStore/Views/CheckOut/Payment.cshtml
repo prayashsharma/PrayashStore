@@ -1,0 +1,206 @@
+﻿@model PrayashStore.ViewModels.ReviewOrderViewModel
+
+@{
+    ViewBag.Title = "Payment";
+}
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(x => x.BillingAddress.Attn)
+    @Html.HiddenFor(x => x.BillingAddress.Line1)
+    @Html.HiddenFor(x => x.BillingAddress.Line2)
+    @Html.HiddenFor(x => x.BillingAddress.City)
+    @Html.HiddenFor(x => x.BillingAddress.State)
+    @Html.HiddenFor(x => x.BillingAddress.ZipCode)
+    @Html.HiddenFor(x => x.BillingAddress.Country)
+    @Html.HiddenFor(x => x.ShippingAddress.Attn)
+    @Html.HiddenFor(x => x.ShippingAddress.Line1)
+    @Html.HiddenFor(x => x.ShippingAddress.Line2)
+    @Html.HiddenFor(x => x.ShippingAddress.City)
+    @Html.HiddenFor(x => x.ShippingAddress.State)
+    @Html.HiddenFor(x => x.ShippingAddress.ZipCode)
+    @Html.HiddenFor(x => x.ShippingAddress.Country)
+    @Html.HiddenFor(x => x.CartCount)
+    @Html.HiddenFor(x => x.ItemCount)
+    @Html.HiddenFor(x => x.CartTotal)
+    for (int i = 0; i < Model.CartItems.Count; i++)
+    {
+        @Html.HiddenFor(model => Model.CartItems[i].CartId)
+        @Html.HiddenFor(model => Model.CartItems[i].Count)
+        @Html.HiddenFor(model => Model.CartItems[i].DateCreated)
+        @Html.HiddenFor(model => Model.CartItems[i].RecordId)
+        @Html.HiddenFor(model => Model.CartItems[i].ProductId)
+        @Html.HiddenFor(model => Model.CartItems[i].Product.Name)
+    }
+
+
+    <div class="container-fluid col-left-no-padding col-right-no-padding">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4>Cart Summary</h4>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-responsive shopping-cart-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th><span class="double-underline"><strong>Total</strong></span></th>
+                                            <th><span class="double-underline"><strong>@Model.CartCount </strong></span></th>
+                                            <th id="cart-total"><span class="double-underline"><strong> $ @Model.CartTotal</strong></span></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody>
+                                        @foreach (var item in Model.CartItems)
+                                        {
+                                            <tr id="row-@item.RecordId" class="cart-row-items">
+                                                <td>
+                                                    <a href="@Url.Action("Details", "Home", new { id = item.ProductId })">
+                                                        <div class="shopping-cart-img-crop">
+                                                            <img src="@Url.Action("GetProductThumbnail", "Image", new { id = item.ProductId })" alt="@item.ProductId" class="img-responsive" />
+                                                        </div>
+                                                    </a>
+                                                </td>
+                                                <td>@item.Product.Name</td>
+                                                <td>@item.Count</td>
+                                                <td>$ @item.Product.Price</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4>Review Order</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <table class="table">
+                                        <tbody>
+                                            <tr>
+                                                @if (Model.CartCount == 1)
+                                                {
+                                                    <td>Order Subtotal (@Model.CartCount item)</td>
+                                                }
+                                                else
+                                                {
+                                                    <td>Order Subtotal (@Model.CartCount items)</td>
+                                                }
+
+                                                <td>$ @Model.CartTotal</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Sales Tax</td>
+                                                <td>$ 0.00</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Total</th>
+                                                <th id="cart-total"> $ @Model.CartTotal</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <br />
+                                    <p>Please review your order and click the Place Order button to finalize your transaction.</p>
+                                    <div class="form-group">
+                                        <input type="submit" value="Place Order" class="btn btn-primary btn-block" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4>Payment</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <p>We are running a promotion: all products are free with the promo code "FREE"</p>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(x => x.PromoCode, new { @class = "control-label" })
+                                    @Html.TextBoxFor(x => x.PromoCode, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(x => x.PromoCode, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4>Shipping Address</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <p>
+                                        @Model.ShippingAddress.Attn <br />
+                                        @Model.ShippingAddress.Line1,
+                                        @Model.ShippingAddress.Line2 <br />
+                                        @Model.ShippingAddress.City,
+                                        @Model.ShippingAddress.State
+                                        @Model.ShippingAddress.ZipCode
+                                        <a href="@Url.Action("Address", "Checkout")" class="btn btn-sm btn-primary">
+                                            <i class="fa fa-edit fa-lg" aria-hidden="true"></i>
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4>Billing Address</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <p>
+                                        @Model.BillingAddress.Attn <br />
+                                        @Model.BillingAddress.Line1,
+                                        @Model.BillingAddress.Line2 <br />
+                                        @Model.BillingAddress.City,
+                                        @Model.BillingAddress.State
+                                        @Model.BillingAddress.ZipCode
+                                        <a href="@Url.Action("Address", "Checkout")" class="btn btn-sm btn-primary">
+                                            <i class="fa fa-edit fa-lg" aria-hidden="true"></i>
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}

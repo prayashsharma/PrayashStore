@@ -1,0 +1,84 @@
+﻿@model PrayashStore.ViewModels.OrderHistoryForAllUsersViewModel
+@{
+    ViewBag.Title = "Order history for all users";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+
+
+
+@using (Html.BeginForm())
+{
+    <div class="row">
+        <div class="col-md-6">
+            @Html.DropDownListFor(m => m.SelectedUserName, Model.UsersDropDownList, "All users", new { @class = "form-control selected-user", id = "user-list" })
+        </div>
+        <div class="col-md-6">
+            <div class="input-group">
+                @Html.TextBoxFor(model => model.OrderId, new { @class = "form-control", id= "searchById", placeholder = "Find by Order#" })                                
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </span>
+            </div>          
+        </div>
+    </div>
+}
+
+@if (Model.Orders.Count() == 0)
+{
+    <br />
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">Order Not found.</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>@Html.ActionLink("User", "HistoryForAllUsers", new { SortOrder = ViewBag.UserSortParm, SelectedUserName = ViewBag.SelectedUserName, OrderId = ViewBag.SearchedOrderId})</th>
+                    <th>@Html.ActionLink("Order#", "HistoryForAllUsers", new { SortOrder = ViewBag.IdSortParm, SelectedUserName = ViewBag.SelectedUserName, OrderId = ViewBag.SearchedOrderId})</th>
+                    <th>@Html.ActionLink("Order Date", "HistoryForAllUsers", new { SortOrder = ViewBag.DateSortParm, SelectedUserName = ViewBag.SelectedUserName, OrderId = ViewBag.SearchedOrderId })</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Orders)
+                {
+                    <tr class="clickable-row" data-order-id="@order.Id">
+                        <td>@order.ApplicationUser.UserName</td>
+                        <td>@order.Id</td>
+                        <td>@order.DateCreated.ToLongDateString() @order.DateCreated.ToLongTimeString()</td>
+                        <td>$@order.Total</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            $('.clickable-row').on('click', function (event) {
+                event.preventDefault();
+                var orderId = $(this).attr('data-order-id');
+                console.log("hello", orderId);
+                window.location.href = '/Order/Detail/' + orderId;
+            });
+
+            // Submit form when dropdown value is changed.
+            $('#user-list').on('change', function (event) {
+                var form = $(event.target).parents('form');
+                form.submit();
+            });
+
+        });
+    </script>
+}

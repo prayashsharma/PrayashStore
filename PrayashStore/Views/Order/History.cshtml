@@ -1,0 +1,71 @@
+﻿@model PrayashStore.ViewModels.OrderHistoryForOneUserViewModel
+@{
+    ViewBag.Title = "My Order History";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+
+@using (Html.BeginForm())
+{
+    <div class="row">
+        <div class="col-md-12">
+            <div class="input-group">
+                @Html.TextBoxFor(model => model.OrderId, new { @class = "form-control", id = "searchById", placeholder = "Find by Order#" })
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+}
+
+@if (Model.Orders.Count() == 0)
+{
+    <br />
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">Order Not found.</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>@Html.ActionLink("Order#", "History", new { sortOrder = ViewBag.IdSortParm, OrderId = ViewBag.SearchedOrderId })</th>
+                    <th>@Html.ActionLink("Order Date", "History", new { sortOrder = ViewBag.DateSortParm, OrderId = ViewBag.SearchedOrderId })</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Orders)
+                {
+                    <tr class="clickable-row" data-order-id="@order.Id">
+                        <td>@order.Id</td>
+                        <td>@order.DateCreated.ToLongDateString() @order.DateCreated.ToLongTimeString()</td>
+                        <td>$@order.Total</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {            
+            $('.clickable-row').on('click', function (event) {
+                event.preventDefault();
+                var orderId = $(this).attr('data-order-id');                
+                window.location.href = '/Order/Detail/' + orderId;                
+            });
+       
+        });
+    </script>
+}

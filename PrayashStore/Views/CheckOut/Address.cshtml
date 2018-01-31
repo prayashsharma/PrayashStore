@@ -1,0 +1,128 @@
+﻿@model PrayashStore.ViewModels.AddressUpdateViewModel
+
+@{
+    ViewBag.Title = "Address";
+}
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="form-group">
+        <input type="submit" value="Review Order" class="btn btn-primary" />
+    </div>
+
+    <fieldset>
+        <h4>Billing Address</h4>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.Attn, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.Attn, new { @class = "form-control", id = "billingAddress_Attn" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.Attn, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.Line1, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.Line1, new { @class = "form-control", id = "billingAddress_Line1" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.Line1, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.Line2, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.Line2, new { @class = "form-control", id = "billingAddress_Line2" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.Line2, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.City, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.City, new { @class = "form-control", id = "billingAddress_City" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.City, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.State, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.State, new { @class = "form-control", id = "billingAddress_State" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.State, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.ZipCode, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.ZipCode, new { @class = "form-control", id = "billingAddress_ZipCode" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.ZipCode, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(x => x.BillingAddress.Country, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.BillingAddress.Country, new { @class = "form-control", id = "billingAddress_Country" })
+            @Html.ValidationMessageFor(x => x.BillingAddress.Country, "", new { @class = "text-danger" })
+        </div>
+
+    </fieldset>
+
+    <br />
+
+    <fieldset>
+        <h4>Shipping Address</h4>
+        <div class="form-group">
+            <label><input type="checkbox" id="copyFromBilling-checkbox" /> Same as billing</label>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.Attn, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.Attn, new { @class = "form-control", id = "shippingAddress_Attn" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.Attn, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.Line1, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.Line1, new { @class = "form-control", id = "shippingAddress_Line1" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.Line1, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.Line2, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.Line2, new { @class = "form-control", id = "shippingAddress_Line2" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.Line2, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.City, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.City, new { @class = "form-control", id = "shippingAddress_City" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.City, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.State, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.State, new { @class = "form-control", id = "shippingAddress_State" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.State, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.ZipCode, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.ZipCode, new { @class = "form-control", id = "shippingAddress_ZipCode" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.ZipCode, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(x => x.ShippingAddress.Country, new { @class = "control-label" })
+            @Html.TextBoxFor(x => x.ShippingAddress.Country, new { @class = "form-control", id = "shippingAddress_Country" })
+            @Html.ValidationMessageFor(x => x.ShippingAddress.Country, "", new { @class = "text-danger" })
+        </div>
+
+    </fieldset>
+
+    <div class="form-group">
+        <input type="submit" value="Review Order" class="btn btn-primary" />
+    </div>
+}
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            $("#copyFromBilling-checkbox").change(function () { //capture when the checkbox is clicked
+                if ($(this).is(":checked")) {
+                    $("[id^='shippingAddress_']").each(function () { // for each input whose ID starts with shippingAddress_
+                        data = $(this).attr("id") // get the full id of the input - e.g. shippingAddress_Attn                        
+                        tmpID = data.split('shippingAddress_'); // split the ID so we get an array with e.g. a blank first element and a second element with the value attention - tmpID[0]=nothing and tmpID[1]=the input ID with shippingAddress_ removed                        
+                        $(this).val($("#billingAddress_" + tmpID[1]).val()) // set the value of the corresponding shipping input with the value of the corresponding billing input - as above tmpID[1] would equal attention
+                    })
+                } else {
+                    $("[id^='shippingAddress_']").each(function () {
+                        $(this).val("") // checkbox is not checked so clear all inputs whose ID starts with shippingAddress_
+                    })
+                }
+            })
+        });
+    </script>
+}
+

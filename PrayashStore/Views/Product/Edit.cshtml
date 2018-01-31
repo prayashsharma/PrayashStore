@@ -1,0 +1,303 @@
+﻿@model PrayashStore.ViewModels.ProductEditFormViewModel
+@{
+    ViewBag.Title = "Edit Product";
+}
+
+<h3>@ViewBag.Title</h3>
+<br />
+
+@using (Html.BeginForm("Edit", "Product", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(x => x.Id)
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.Name)
+        @Html.TextBoxFor(x => x.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(x => x.Name, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.Description)
+        @Html.TextAreaFor(x => x.Description, new { @class = "form-control vertical-resize" })
+        @Html.ValidationMessageFor(x => x.Description, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.Price)
+        @Html.TextBoxFor(x => x.Price, new { @class = "form-control" })
+        @Html.ValidationMessageFor(x => x.Price, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.Gender)
+        @Html.EnumDropDownListFor(x => x.Gender, "", new { @class = "form-control" })
+        @Html.ValidationMessageFor(x => x.Gender, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.Category)
+        @Html.DropDownListFor(x => x.Category, Model.Categories.Select(x => new SelectListItem { Text = x.Name, Value = x.Id.ToString() }), "", new { @class = "form-control" })
+        @Html.ValidationMessageFor(x => x.Category, "", new { @class = "text-danger" })
+    </div>
+ 
+    <div class="form-group">
+        <div class="container-fluid col-left-no-padding col-right-no-padding">
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.LabelFor(x => x.Thumbnail)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="thumbnail-section">
+                        <div id="load-thumbnail" class="img-crop">
+                            <img id="thumbnail-id" src="@Url.Action("GetProductThumbnail", "Image", new { id = Model.Id })" alt="..." class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="thumbnail-browse-section" class="form-group">
+                        <input type="file" name="thumbnail" id="thumbnail-file" class="file hide-element">
+                        <div class="input-group">
+                            <span class="input-group-btn">
+                                <button class="browse btn btn-primary" type="button"><i class="fa fa-search"></i> Browse</button>
+                            </span>
+                            <input type="text" id="thumbnail-name" class="form-control" disabled placeholder="Upload Image" style="padding-left:5px;">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="cancel-thumbnail-chg"><i class="fa fa-remove"></i> Cancel</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="alert alert-info" role="alert">            
+            <a href="#" data-toggle="modal" data-id="@Model" data-target="#editImagesModal" class="alert-link">Click Here </a> to Edit Product Images.
+        </div>        
+    </div>
+
+    <br />
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+    <div class="form-group">
+        @Html.ActionLink("Cancel and Go Back", "Index")
+    </div>
+}
+
+<div class="modal fade" id="editImagesModal" tabindex="-1" role="dialog" aria-labelledby="editImagesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="editImagesModalTitle">Edit Product Images</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid" id="images-section">
+                    <div id="image-modal-body-content">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary" id="add-image-btn">
+                                <i class="fa fa-plus"></i> Add New Image
+                            </button>
+                        </div>
+                        <div id="image-browse-section" class="form-group" style="display:none">
+                            <input type="file" name="product-image" id="image-file" class="file hide-element">
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button class="browse btn btn-primary" type="button"><i class="fa fa-search"></i>Browse</button>
+                                </span>
+                                <input type="text" id="image-name" class="form-control" disabled placeholder="Upload Image" style="padding-left:5px;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="button" id="add-image" data-product-id="@Model.Id"><i class="fa fa-plus"></i> Add</button>
+                                    <button class="btn btn-default" type="button" id="cancel-image-add"><i class="fa fa-remove"></i> Cancel</button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row" id="image-row">
+                            @foreach (var image in Model.ProductImages)
+                            {
+                                <div class="col-sm-6 col-md-3" id="id-@image.Id">
+                                    <div class="thumbnail img-crop">
+                                        <img src="@Url.Action("GetProductImage", "Image", new { id = image.Id })" alt="..." class="img-responsive" />
+                                    </div>
+
+                                    <div class="caption">
+                                        <p>
+                                            <button type="button" class="add-to-cart btn btn-default btn-block" id="remove-image" data-image-id="@image.Id">
+                                                <i class="fa fa-trash" aria-hidden="true"></i> Remove
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $(document).on('click', '.browse', function () {
+                var file = $(this).parent().parent().parent().find('.file');
+                file.trigger('click');
+            });
+
+            $(document).on('change', '#thumbnail-file', function () {
+                $(this).parent().find('#thumbnail-name').val($(this).val().replace(/C:\\fakepath\\/i, ''));
+            });
+
+            $('body').on('change', '#thumbnail-file', function () {
+                readURL(this);
+            });
+
+            function readURL(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        $('#thumbnail-id').attr('src', e.target.result);
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            $('body').on('click', '#cancel-thumbnail-chg', function (event) {
+                event.preventDefault();
+                $('#thumbnail-section').load(GetUrlPath() + ' #load-thumbnail');
+                $("#thumbnail-browse-section").load(GetUrlPath() + ' #thumbnail-browse-section');
+            });
+
+            //Get URL path for the page
+            function GetUrlPath() {
+                var urlArray = window.location.href.split("/");
+                var urlPath = '/';
+                for (var i = 3; i < urlArray.length; i++) {
+                    urlPath = urlPath + urlArray[i] + '/';
+                }
+                return urlPath;
+            }
+
+            // Show elements when Add button is clicked
+            $('body').on('click', '#add-image-btn', function (event) {
+                event.preventDefault();
+                console.log("add button clicked");
+                $('#image-browse-section').show();
+            });
+
+            // Hide elements when Cancel button is clicked
+            $('body').on('click', '#cancel-image-add', function (event) {
+                event.preventDefault();
+                $('#image-browse-section').hide();
+                $('#image-file').val('');
+                $('#image-name').val('');
+            });
+
+            // Update textbox value with image name
+            $(document).on('change', '#image-file', function () {
+                $(this).parent().find('#image-name').val($(this).val().replace(/C:\\fakepath\\/i, ''));
+            });
+
+            // Remove Image
+            $('body').on('click', '#remove-image', function (event) {
+                event.preventDefault();
+                var imageId = $(this).attr('data-image-id');
+
+                // Checking whether FormData is available in browser
+                if (window.FormData !== undefined) {
+                    var imageCount = $("#image-row").children().length;
+                    if (imageCount > 1) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteProductImage", "Image")',
+                            type: "POST",
+                            data: { 'id': imageId },
+                            dataType: 'json',
+                            success: function (result) {
+                                if (!result.success) {
+                                    alert(result.message)
+                                }
+                                else {
+                                    $('#images-section').load(GetUrlPath() + ' #image-modal-body-content');
+                                }
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                                ShowToast("Error: Image could not be removed", 2500, 'error');
+
+                            }
+                        });
+                    }
+                    else {
+                        ShowToast("Error: Image could not be removed", 2500, 'error');
+                    }
+                }
+                else {
+                    ShowToast("Error: FormData is not supported.", 2500, 'error');
+                }
+
+            });
+
+            $('body').on('click', '#add-image', function (event) {
+                event.preventDefault();
+                var productId = $(this).attr('data-product-id');
+
+                // Checking whether FormData is available in browser
+                if (window.FormData !== undefined) {
+                    var files = $('#image-file').get(0).files;
+                    var fileData = new FormData();
+
+                    // Looping over all files and add it to FormData object
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append("image", files[i]);
+                    }
+
+                    // Adding one more key to FormData object
+                    fileData.append('productId', productId);
+
+                    $.ajax({
+                        url: '@Url.Action("AddProductImage", "Image")',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        dataType: 'json',
+                        success: function (result) {
+                            if (!result.success) {
+                                alert(result.message)
+                            }
+                            else {
+                                $('#images-section').load(GetUrlPath() + ' #image-modal-body-content');
+                            }
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) { 
+                            console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                            ShowToast("Error: Image Add failed", 2500, 'error');
+
+                        }
+                    });
+                }
+                else {                    
+                    ShowToast("Error: FormData is not supported.", 2500, 'error');
+                }
+            });
+        });
+    </script>
+}

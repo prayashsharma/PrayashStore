@@ -1,0 +1,19 @@
+﻿@using PrayashStore.ViewModels;
+
+
+@foreach (var item in ViewData["Menu"] as List<MenuViewModel>)
+{    
+    <li class="dropdown dropdown-category">
+        <a href="@Url.Action("Index", "Home", new {gender = item.Gender})">@item.Gender </a>
+        
+
+        <ul class="dropdown-menu">
+            @foreach (var category in item.Categories)
+            {
+                @*<li><a href="#">@category.Name</a></li>*@
+                <li><a href="@Url.Action("Index", "Home", new {id = category.Id, gender = item.Gender})">@category.Name</a></li>
+            }                        
+        </ul>
+    </li>
+}
+

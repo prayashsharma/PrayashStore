@@ -1,0 +1,104 @@
+﻿@model PrayashStore.ViewModels.UsersIndexViewModel
+@{
+    ViewBag.Title = "Manage Users";
+}
+
+<h3>@ViewBag.Title</h3>
+
+<div class="table-responsive role-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th hidden>User Id</th>
+                <th>Users</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td hidden>@user.UserId</td>
+                    <td>@user.UserName</td>
+                    <td>
+                        <a href="#" data-toggle="modal" data-id="@user.UserId" data-user="@user.UserName" data-target="#resetUserPasswordModal" class="userPasswordReset">Reset Password</a>                        
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+<form id="passwordResetForm" action="">    
+    <div class="modal fade" id="resetUserPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetUserPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalHeaderTitleLabel1">Reset Password</h4>
+                </div>
+                <div class="modal-body">                    
+                    @Html.Partial("_ResetPassword", Model.UserResetPassword)                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="resetPassword">Reset</button>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@section scripts
+{
+    <script>
+        var userName = '';
+        var userId = '';
+        var modal = '';
+        $(document).ready(function () {
+            $(document).on('show.bs.modal', '#resetUserPasswordModal', function (e) {
+                modal = $(this);
+                userName = $(e.relatedTarget).data('user');
+                userId = $(e.relatedTarget).data('id');                
+                $(this).find(".modal-title").html("Reset Password for: <b>" + userName + "</b>");
+
+            });
+            $('#resetPassword').on('click', function (event) {                                              
+                var postData = $('#passwordResetForm').serialize() + '&UserId=' + userId + '&__RequestVerificationToken=' + gettoken();                
+                $.ajax({
+                    url: '@Url.Action("ResetPassword", "Users")',
+                    type: "POST",                    
+                    data: postData,
+                    dataType: 'json',
+                    success: function (result) {
+                        if (result.Success) {
+                            $("#resetUserPasswordModal .close").click()
+                            modal.find('#passwordResetForm').trigger('reset');
+                            ShowToast(result.Message, 2500, 'success');
+                        }
+                        else {                            
+                            modal.find('#modal-error').html(result.Message);
+                        }
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {                        
+                        console.log("Status: " + textStatus + ", Error: " + errorThrown);
+                        ShowToast("Error: Password reset failed", 2500, 'error');
+                    }
+                });
+            });
+
+            // Function to return Anti Forgery Token
+            function gettoken() {
+                var token = '@Html.AntiForgeryToken()';
+                token = $(token).val();
+                return token;
+            }
+
+        });
+    </script>
+}
