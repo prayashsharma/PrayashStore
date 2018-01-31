@@ -194,6 +194,17 @@ a.alert-link:hover {
     }
 }
 
+.bx-controls-direction a {
+    opacity: 0;
+    transition: opacity .25s ease-in-out;
+    -moz-transition: opacity .25s ease-in-out;
+    -webkit-transition: opacity .25s ease-in-out;
+}
+
+.bx-wrapper:hover .bx-controls-direction a {
+    opacity: 1;
+}
+
 /** toastr override*/
 .toast-success {
   background-color: #2196f3
