@@ -108,9 +108,7 @@
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         alert("Status: " + textStatus + ", Error: " + errorThrown);
                     }
-                });
-
-                $this.blur();
+                });               
             });
 
             $('.remove-item').on('click', function (event) {
@@ -138,8 +136,7 @@
                             ShowToast("Error: Item could not be removed the cart", 2500, 'error');
                         }
                     });
-                }
-                $this.blur();
+                }                
             });
 
             $('.plus-cart-qty').on('click', function (event) {
@@ -209,8 +206,6 @@
                 $('#cart-status').html('Cart <span class="badge">' + result.CartCount + '</span>');
                 if (result.CartCount == 0)
                 {
-                    //$('#check-out').prop("disabled", true);
-                    //$('#empty-cart').prop("disabled", true);
                     $('.shopping-cart').hide();
                     $('.shopping-cart-buttons').hide();
                     $('.shopping-cart-empty-message').show();

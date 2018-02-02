@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<PrayashStore.Models.Product>
 @{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Prayash Store";
 }
 
 @if (Model.Count() == 0)
@@ -56,10 +56,8 @@
                             ShowToast("Error: Item could not be added to the cart", 2500, 'error');
                         }
                     });
-                }
-                $(this).blur();
+                }                
             });
-
         });
     </script>
 }

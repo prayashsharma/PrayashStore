@@ -20,8 +20,20 @@
                     <li>@Html.ActionLink("Manage Roles", "Index", "Roles")</li>
                     <li>@Html.ActionLink("Manage Products", "Index", "Product")</li>
                     <li>@Html.ActionLink("Manage Categories", "Index", "Category")</li>
-
                 }
+
+                @if (User.IsInRole("CanManageProducts"))
+                {
+                    <li>@Html.ActionLink("Order History for all Users", "HistoryForAllUsers", "Order")</li>
+                    <li>@Html.ActionLink("Manage Products", "Index", "Product")</li>
+                    <li>@Html.ActionLink("Manage Categories", "Index", "Category")</li>
+                }
+                @if (User.IsInRole("CanManageUsersAndRoles"))
+                {
+                    <li>@Html.ActionLink("Manage Users", "Index", "Users")</li>
+                    <li>@Html.ActionLink("Manage Roles", "Index", "Roles")</li>
+                }
+
                 <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
             </ul>
         </li>

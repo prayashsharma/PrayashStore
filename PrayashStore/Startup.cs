@@ -45,6 +45,66 @@ namespace PrayashStore
 
 
             ConfigureAuth(app);
+            //CreateRolesandUsers();
+        }
+        private void CreateRolesandUsers()
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+
+                var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
+                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
+
+                if (!roleManager.RoleExists("Admin"))
+                {
+
+                    // Create an Admin role   
+                    var role = new IdentityRole()
+                    {
+                        Name = "Admin"
+                    };
+                    roleManager.Create(role);
+
+                    // Create a Admin user who will maintain the website
+                    var user = new ApplicationUser()
+                    {
+                        UserName = "admin@prayashstore.com",
+                        Email = "admin@prayashstore.com",
+                        EmailConfirmed = true,
+                    };
+
+                    var userPassword = "Admin-12345";
+                    var result = UserManager.Create(user, userPassword);
+
+                    //Add default User to Role Admin   
+                    if (result.Succeeded)
+                        UserManager.AddToRole(user.Id, "Admin");
+                }
+
+
+                // Create Other roles    
+                if (!roleManager.RoleExists("CanManageProducts"))
+                {
+                    var role = new IdentityRole()
+                    {
+                        Name = "CanManageProducts"
+                    };
+
+                    roleManager.Create(role);
+
+                }
+
+                if (!roleManager.RoleExists("CanManageUsersAndRoles"))
+                {
+                    var role = new IdentityRole()
+                    {
+                        Name = "CanManageUsersAndRoles"
+                    };
+
+                    roleManager.Create(role);
+
+                }
+            }
         }
     }
 }

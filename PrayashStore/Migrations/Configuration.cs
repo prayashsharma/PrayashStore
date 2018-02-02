@@ -1,15 +1,13 @@
 namespace PrayashStore.Migrations
 {
-    using System;
-    using System.Data.Entity;
+    using Models;
     using System.Data.Entity.Migrations;
-    using System.Linq;
 
     internal sealed class Configuration : DbMigrationsConfiguration<PrayashStore.Models.ApplicationDbContext>
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = false;
+            AutomaticMigrationsEnabled = true;
         }
 
         protected override void Seed(PrayashStore.Models.ApplicationDbContext context)
@@ -19,12 +17,10 @@ namespace PrayashStore.Migrations
             //  You can use the DbSet<T>.AddOrUpdate() helper extension method 
             //  to avoid creating duplicate seed data. E.g.
             //
-            //    context.People.AddOrUpdate(
-            //      p => p.FullName,
-            //      new Person { FullName = "Andrew Peters" },
-            //      new Person { FullName = "Brice Lambson" },
-            //      new Person { FullName = "Rowan Miller" }
-            //    );
+            context.Users.AddOrUpdate(
+              p => p.UserName,
+              new ApplicationUser { UserName = "prayashsharma@test.com" }
+            );
             //
         }
     }
