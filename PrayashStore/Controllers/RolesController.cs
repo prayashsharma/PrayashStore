@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.Owin.Security;
 using PrayashStore.Models;
 using PrayashStore.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 
 namespace PrayashStore.Controllers
@@ -13,15 +15,19 @@ namespace PrayashStore.Controllers
     {
         private ApplicationRoleManager _roleManager;
         private ApplicationUserManager _userManager;
+        private ApplicationSignInManager _signInManager;
+        private readonly IAuthenticationManager _authManager;
         public RolesController()
         {
 
         }
 
-        public RolesController(ApplicationRoleManager roleManager, ApplicationUserManager userManager)
+        public RolesController(ApplicationRoleManager roleManager, ApplicationUserManager userManager, ApplicationSignInManager signInManager, IAuthenticationManager authManager)
         {
             _roleManager = roleManager;
             _userManager = userManager;
+            _signInManager = signInManager;
+            _authManager = authManager;
         }
 
         public ApplicationRoleManager RoleManager
@@ -39,8 +45,21 @@ namespace PrayashStore.Controllers
                 return _userManager;
             }
         }
-
-        public ActionResult Index(RolesIndexViewModel model)
+        public ApplicationSignInManager SignInManager
+        {
+            get
+            {
+                return _signInManager;
+            }
+        }
+        private IAuthenticationManager AuthenticationManager
+        {
+            get
+            {
+                return _authManager;
+            }
+        }
+        public async Task<ActionResult> Index(RolesIndexViewModel model)
         {
             var roles = RoleManager.Roles.ToList();
             var users = UserManager.Users.ToList();
@@ -54,7 +73,7 @@ namespace PrayashStore.Controllers
             {
                 var user = UserManager.FindByName(model.SelectedUserName);
                 if (user != null)
-                    roleNames = UserManager.GetRoles(user.Id);
+                    roleNames = await UserManager.GetRolesAsync(user.Id);
             }
 
             return View(GetRoles(roleNames, users));
@@ -62,12 +81,12 @@ namespace PrayashStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(string roleName)
+        public async Task<ActionResult> Delete(string roleName)
         {
             var role = RoleManager.FindByName(roleName);
             if (role != null)
             {
-                var result = RoleManager.Delete(role);
+                var result = await RoleManager.DeleteAsync(role);
                 if (result.Succeeded)
                 {
                     return Json(new { success = true, message = "Role deleted Successfully" });
@@ -83,12 +102,12 @@ namespace PrayashStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(RolesCreateViewModel roleCreateViewModel)
+        public async Task<ActionResult> Create(RolesCreateViewModel roleCreateViewModel)
         {
             if (!ModelState.IsValid)
                 return View(roleCreateViewModel);
 
-            var result = RoleManager.Create(new IdentityRole(roleCreateViewModel.Name));
+            var result = await RoleManager.CreateAsync(new IdentityRole(roleCreateViewModel.Name));
             if (!result.Succeeded)
             {
                 ModelState.AddModelError("", result.Errors.FirstOrDefault());
@@ -100,7 +119,7 @@ namespace PrayashStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteRoleForUser(string userName, string roleName)
+        public async Task<ActionResult> DeleteRoleForUser(string userName, string roleName)
         {
             var user = UserManager.FindByName(userName);
 
@@ -114,7 +133,13 @@ namespace PrayashStore.Controllers
                 return Json(new { success = false, message = "User not present in current role, Update Failed" });
             }
 
-            UserManager.RemoveFromRole(user.Id, roleName);
+            await UserManager.RemoveFromRoleAsync(user.Id, roleName);
+            if (User.Identity.Name == userName)
+            {
+                AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+                await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+            }
+
             return Json(new { success = true, message = "Role removed from User Successfully" });
         }
 
@@ -125,14 +150,14 @@ namespace PrayashStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddRoleToUser(RolesAndUsersDropDownViewModel model)
+        public async Task<ActionResult> AddRoleToUser(RolesAndUsersDropDownViewModel model)
         {
 
             if (!ModelState.IsValid)
                 return View(GetRolesAndUsersForDropDownList());
 
-            var user = UserManager.FindByName(model.SelectedUserName);
-            var role = RoleManager.FindByName(model.SelectedRoleName);
+            var user = await UserManager.FindByNameAsync(model.SelectedUserName);
+            var role = await RoleManager.FindByNameAsync(model.SelectedRoleName);
 
             if (user == null)
             {
@@ -152,7 +177,12 @@ namespace PrayashStore.Controllers
                 return View(GetRolesAndUsersForDropDownList());
             }
 
-            UserManager.AddToRole(user.Id, role.Name);
+            await UserManager.AddToRoleAsync(user.Id, role.Name);
+            if (User.Identity.GetUserId() == user.Id)
+            {
+                AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+                await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+            }
             return RedirectToAction("Index", new RolesAndUsersDropDownViewModel { SelectedUserName = model.SelectedUserName });
         }
 
