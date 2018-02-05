@@ -22,10 +22,13 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    @Html.Action("Menu", "Menu")                    
+                    @Html.Action("Menu", "Menu")                                        
                     @Html.Action("CartSummary", "ShoppingCart")
+                    <li>@Html.ActionLink("About", "About")</li> 
+                    <li>@Html.ActionLink("Contact", "Contact")</li>   
                 </ul>                
                 @Html.Partial("_LoginPartial")
+               
             </div>
         </div>
     </div> 

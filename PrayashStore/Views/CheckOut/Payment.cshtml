@@ -124,6 +124,7 @@
                                     </table>
                                     <br />
                                     <p>Please review your order and click the Place Order button to finalize your transaction.</p>
+                                    <p class="bg-danger">This is a sample test application and your order will not be fulfilled.</p>
                                     <div class="form-group">
                                         <input type="submit" value="Place Order" class="btn btn-primary btn-block" />
                                     </div>
@@ -144,7 +145,7 @@
                                 </div>
                                 <div class="form-group">
                                     @Html.LabelFor(x => x.PromoCode, new { @class = "control-label" })
-                                    @Html.TextBoxFor(x => x.PromoCode, new { @class = "form-control" })
+                                    @Html.TextBoxFor(x => x.PromoCode, new { @class = "form-control", placeholder ="Enter Promo code here" })
                                     @Html.ValidationMessageFor(x => x.PromoCode, "", new { @class = "text-danger" })
                                 </div>
                             </div>
