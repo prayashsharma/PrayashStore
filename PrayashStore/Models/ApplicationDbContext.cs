@@ -5,11 +5,9 @@ namespace PrayashStore.Models
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        private int count = 0;
         public ApplicationDbContext()
             : base("DefaultConnection", throwIfV1Schema: false)
         {
-            count = count + 1;
         }
 
         public DbSet<Category> Categories { get; set; }
