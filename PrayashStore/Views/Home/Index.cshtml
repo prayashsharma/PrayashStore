@@ -3,6 +3,24 @@
     ViewBag.Title = "Prayash Store";
 }
 
+@if (!String.IsNullOrEmpty(ViewBag.GenderMenuItem))
+{
+
+    if (!String.IsNullOrEmpty(ViewBag.CategoryMenuItem))
+    {
+        <ol class="breadcrumb">
+            <li>@ViewBag.GenderMenuItem</li>
+            <li>@ViewBag.CategoryMenuItem</li>
+        </ol>
+    }
+    else
+    {
+        <ol class="breadcrumb">
+            <li>@ViewBag.GenderMenuItem</li>
+        </ol>
+    }
+}
+
 @if (Model.Count() == 0)
 {
     <div class="row">
@@ -11,6 +29,7 @@
         </div>
     </div>
 }
+
 <div class="row">
 
     @foreach (var item in Model)
@@ -22,8 +41,8 @@
                 </a>
             </div>
 
-            <div class="caption">     
-                <p>@Html.DisplayFor(modelItem => item.Name)<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
+            <div class="caption">
+                <p>@Html.DisplayFor(modelItem => item.Name) (@Html.DisplayFor(modelItem => item.Gender))<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
                 <p>
                     <button type="button" class="add-to-cart btn btn-primary btn-block" data-id="@item.Id">
                         <i class="fa fa-shopping-cart" aria-hidden="true"></i> Add To Cart
@@ -56,7 +75,7 @@
                             ShowToast("Error: Item could not be added to the cart", 2500, 'error');
                         }
                     });
-                }                
+                }
             });
         });
     </script>

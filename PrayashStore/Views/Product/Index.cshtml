@@ -50,7 +50,7 @@
             </div>
 
             <div class="caption">
-                <p>@Html.DisplayFor(modelItem => item.Name)<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
+                <p>@Html.DisplayFor(modelItem => item.Name) (@Html.DisplayFor(modelItem => item.Gender))<br />$ @Html.DisplayFor(modelItem => item.Price)</p>
                 <p>
                     <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-primary">
                         <i class="fa fa-pencil"></i> Edit

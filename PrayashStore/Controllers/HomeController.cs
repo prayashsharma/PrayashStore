@@ -40,6 +40,9 @@ namespace PrayashStore.Controllers
                 products = _context.Products.Where(p => p.CategoryId == id && p.Gender == genderEnum).ToList();
             }
 
+            ViewBag.GenderMenuItem = gender;
+            ViewBag.CategoryMenuItem = (id == null) ? null : _context.Categories.SingleOrDefault(x => x.Id == id).Name;
+
             return View(products);
         }
 
