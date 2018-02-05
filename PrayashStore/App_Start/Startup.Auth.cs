@@ -2,6 +2,7 @@
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
+using Microsoft.Owin.Security.DataProtection;
 using Owin;
 using PrayashStore.Models;
 using System;
@@ -10,9 +11,13 @@ namespace PrayashStore
 {
     public partial class Startup
     {
+        internal static IDataProtectionProvider DataProtectionProvider { get; private set; }
+
         // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
         public void ConfigureAuth(IAppBuilder app)
         {
+            DataProtectionProvider = app.GetDataProtectionProvider();
+
             // Configure the _context context, user manager and signin manager to use a single instance per request
             //app.CreatePerOwinContext(ApplicationDbContext.Create);
             //app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);

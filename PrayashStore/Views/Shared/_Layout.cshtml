@@ -24,8 +24,8 @@
                 <ul class="nav navbar-nav">
                     @Html.Action("Menu", "Menu")                                        
                     @Html.Action("CartSummary", "ShoppingCart")
-                    <li>@Html.ActionLink("About", "About")</li> 
-                    <li>@Html.ActionLink("Contact", "Contact")</li>   
+                    <li>@Html.ActionLink("About", "About", "Home")</li> 
+                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>   
                 </ul>                
                 @Html.Partial("_LoginPartial")
                
