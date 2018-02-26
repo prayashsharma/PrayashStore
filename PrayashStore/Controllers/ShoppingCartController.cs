@@ -1,8 +1,7 @@
 ﻿using PrayashStore.Attributes;
-using PrayashStore.Helpers;
 using PrayashStore.Models;
+using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
-using System.Linq;
 using System.Web.Mvc;
 
 namespace PrayashStore.Controllers
@@ -10,22 +9,24 @@ namespace PrayashStore.Controllers
     public class ShoppingCartController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ICartService _cartService;
+        private readonly IProductService _productService;
 
-        public ShoppingCartController(ApplicationDbContext context)
+        public ShoppingCartController(ApplicationDbContext context, ICartService cartService, IProductService productService)
         {
             _context = context;
+            _cartService = cartService;
+            _productService = productService;
         }
 
         public ActionResult Index()
         {
-            var cart = ShoppingCartHelper.GetCart(_context, HttpContext);
-
             var shoppingCartViewModel = new ShoppingCartViewModel
             {
                 Success = true,
-                CartItems = cart.GetCartItems(),
-                CartTotal = string.Format("{0:F}", cart.GetTotal()),
-                CartCount = cart.GetCount()
+                CartItems = _cartService.GetCartItems(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal()),
+                CartCount = _cartService.GetCount()
             };
 
             return View(shoppingCartViewModel);
@@ -35,18 +36,15 @@ namespace PrayashStore.Controllers
         [HttpPost]
         public ActionResult AddToCart(int id)
         {
-            var addedProduct = _context.Products.Single(product => product.Id == id);
-
-            var cart = ShoppingCartHelper.GetCart(_context, HttpContext);
-
-            cart.AddToCart(addedProduct);
+            var addedProduct = _productService.GetProductById(id);
+            _cartService.AddToCart(addedProduct);
 
             var shoppingCartViewModel = new ShoppingCartViewModel
             {
                 Success = true,
                 Message = addedProduct.Name + " has been added to your shopping cart",
-                CartCount = cart.GetCount(),
-                CartTotal = string.Format("{0:F}", cart.GetTotal())
+                CartCount = _cartService.GetCount(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal())
             };
 
             return Json(shoppingCartViewModel);
@@ -55,16 +53,14 @@ namespace PrayashStore.Controllers
         [HttpPost]
         public ActionResult UpdateMultipleQuantitiesToCart(int productId, int quantity, int cartRecordId)
         {
-            var updatedProduct = _context.Products.Single(product => product.Id == productId);
-            var cart = ShoppingCartHelper.GetCart(_context, HttpContext);
-
-            var updatedQuantity = quantity - cart.GetItemCount(productId);
+            var updatedProduct = _productService.GetProductById(productId);
+            var updatedQuantity = quantity - _cartService.GetItemCount(productId);
 
             if (updatedQuantity > 0)
             {
                 while (updatedQuantity > 0)
                 {
-                    cart.AddToCart(updatedProduct);
+                    _cartService.AddToCart(updatedProduct);
                     updatedQuantity--;
                 }
 
@@ -74,7 +70,7 @@ namespace PrayashStore.Controllers
             {
                 while (updatedQuantity < 0)
                 {
-                    cart.RemoveItemFromCart(cartRecordId);
+                    _cartService.RemoveItemFromCart(cartRecordId);
                     updatedQuantity++;
                 }
             }
@@ -83,8 +79,9 @@ namespace PrayashStore.Controllers
             {
                 Success = true,
                 Message = updatedProduct.Name + " has been updated in your shopping cart",
-                CartCount = cart.GetCount(),
-                CartTotal = string.Format("{0:F}", cart.GetTotal())
+                CartCount = _cartService.GetCount(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal())
+
             };
 
             return Json(shoppingCartViewModel);
@@ -93,19 +90,17 @@ namespace PrayashStore.Controllers
         [HttpPost]
         public ActionResult RemoveItemFromCart(int id)
         {
-            var cart = ShoppingCartHelper.GetCart(_context, this.HttpContext);
-
-            string productName = _context.Carts.Single(item => item.RecordId == id).Product.Name;
-
-            int itemCount = cart.RemoveItemFromCart(id);
+            string productName = _cartService.GetCartItemByRecordId(id).Product.Name;
+            int itemCount = _cartService.RemoveItemFromCart(id);
 
             var shoppingCartViewModel = new ShoppingCartViewModel
             {
                 Success = true,
                 Message = Server.HtmlEncode(productName) +
                     " has been removed from your shopping cart.",
-                CartTotal = string.Format("{0:F}", cart.GetTotal()),
-                CartCount = cart.GetCount(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal()),
+                CartCount = _cartService.GetCount(),
+
                 ItemCount = itemCount,
                 DeleteId = id
             };
@@ -115,19 +110,17 @@ namespace PrayashStore.Controllers
         [HttpPost]
         public ActionResult RemoveMultipleItemsFromCart(int id)
         {
-            var cart = ShoppingCartHelper.GetCart(_context, this.HttpContext);
-
-            string productName = _context.Carts.Single(item => item.RecordId == id).Product.Name;
-
-            int itemCount = cart.RemoveMultipleItemsFromCart(id);
+            string productName = _cartService.GetCartItemByRecordId(id).Product.Name;
+            int itemCount = _cartService.RemoveMultipleItemsFromCart(id);
 
             var shoppingCartViewModel = new ShoppingCartViewModel
             {
                 Success = true,
                 Message = Server.HtmlEncode(productName) +
                     " has been removed from your shopping cart.",
-                CartTotal = string.Format("{0:F}", cart.GetTotal()),
-                CartCount = cart.GetCount(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal()),
+                CartCount = _cartService.GetCount(),
+
                 ItemCount = itemCount,
                 DeleteId = id
             };
@@ -137,15 +130,15 @@ namespace PrayashStore.Controllers
         [HttpPost]
         public ActionResult EmptyCart()
         {
-            var cart = ShoppingCartHelper.GetCart(_context, this.HttpContext);
-            cart.EmptyCart();
+            _cartService.EmptyCart();
 
             var shoppingCartViewModel = new ShoppingCartViewModel
             {
                 Success = true,
                 Message = " All items has been removed from your shopping cart.",
-                CartTotal = string.Format("{0:F}", cart.GetTotal()),
-                CartCount = cart.GetCount(),
+                CartTotal = string.Format("{0:F}", _cartService.GetTotal()),
+                CartCount = _cartService.GetCount(),
+
                 ItemCount = 0,
             };
             return Json(shoppingCartViewModel);
@@ -155,9 +148,7 @@ namespace PrayashStore.Controllers
         [NoCache]
         public ActionResult CartSummary()
         {
-            var cart = ShoppingCartHelper.GetCart(_context, this.HttpContext);
-
-            ViewData["CartCount"] = cart.GetCount();
+            ViewData["CartCount"] = _cartService.GetCount();
             return PartialView("_CartSummary");
         }
     }

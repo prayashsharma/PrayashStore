@@ -15,6 +15,7 @@ namespace PrayashStore.Services.Interfaces
         int GetCount(); //total count
         int GetItemCount(int productId);
         decimal GetTotal();
+        Cart GetCartItemByRecordId(int recordId);
         void MigrateCart(string migrateTo, string migrateFrom);
 
     }

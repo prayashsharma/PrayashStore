@@ -1,4 +1,5 @@
 ﻿using PrayashStore.Models;
+using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -8,16 +9,16 @@ namespace PrayashStore.Controllers
 {
     public class MenuController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        public MenuController(ApplicationDbContext context)
+        private readonly ICategoryService _categoryService;
+        public MenuController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         [ChildActionOnly]
         public ActionResult Menu()
         {
-            var categories = _context.Categories.ToList();
+            var categories = _categoryService.GetAllCategories().ToList();
 
             List<MenuViewModel> menuViewModels = new List<MenuViewModel>();
 

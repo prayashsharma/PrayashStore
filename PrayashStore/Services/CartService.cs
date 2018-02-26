@@ -28,12 +28,10 @@ namespace PrayashStore.Services
 
         public void AddToCart(Product product)
         {
-            // Get the matching cart and product instances
             var cartItem = CartRepository.SingleOrDefault(c => c.CartId == ShoppingCartId && c.ProductId == product.Id);
 
             if (cartItem == null)
             {
-                // Create a new cart item if no cart item exists
                 cartItem = new Cart
                 {
                     ProductId = product.Id,
@@ -45,11 +43,9 @@ namespace PrayashStore.Services
             }
             else
             {
-                // If the item does exist in the cart, 
-                // then add one to the quantity
                 cartItem.Count++;
+                CartRepository.Edit(cartItem, cartItem.RecordId);
             }
-            // Save changes
             UnitOfWork.Complete();
         }
 
@@ -71,9 +67,7 @@ namespace PrayashStore.Services
                 }
                 else
                 {
-                    // Generate a new random GUID using System.Guid class
                     Guid tempCartId = Guid.NewGuid();
-                    // Send tempCartId back to client as a cookie
                     context.Session[CartSessionKey] = tempCartId.ToString();
                 }
             }
@@ -121,12 +115,15 @@ namespace PrayashStore.Services
                 if (productInCart != null)
                 {
                     productInCart.Count += item.Count;
+                    CartRepository.Edit(productInCart, productInCart.RecordId);
+
                     Cart migratedCart = CartRepository.SingleOrDefault(x => x.CartId == item.CartId && x.ProductId == item.ProductId);
                     CartRepository.Remove(migratedCart);
                 }
                 else
                 {
                     item.CartId = destinationCartId;
+                    CartRepository.Edit(item, item.RecordId);
                 }
             }
             UnitOfWork.Complete();
@@ -135,12 +132,43 @@ namespace PrayashStore.Services
 
         public int RemoveItemFromCart(int cartRecordId)
         {
-            throw new NotImplementedException();
+            var cartItem = CartRepository.SingleOrDefault(x => x.CartId == ShoppingCartId && x.RecordId == cartRecordId);
+
+            int itemCount = 0;
+
+            if (cartItem != null)
+            {
+                if (cartItem.Count > 1)
+                {
+                    cartItem.Count--;
+                    CartRepository.Edit(cartItem, cartItem.RecordId);
+                    itemCount = cartItem.Count;
+                }
+                else
+                {
+                    CartRepository.Remove(cartItem);
+                }
+                UnitOfWork.Complete();
+            }
+            return itemCount;
+
         }
 
         public int RemoveMultipleItemsFromCart(int cartRecordId)
         {
-            throw new NotImplementedException();
+            var cartItem = CartRepository.SingleOrDefault(x => x.CartId == ShoppingCartId && x.RecordId == cartRecordId);
+
+            if (cartItem != null)
+            {
+                _cartRepository.Remove(cartItem);
+                UnitOfWork.Complete();
+            }
+            return 0;
+        }
+
+        public Cart GetCartItemByRecordId(int recordId)
+        {
+            return CartRepository.Get(recordId);
         }
     }
 }
