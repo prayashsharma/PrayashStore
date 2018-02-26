@@ -1,5 +1,5 @@
 ﻿using PrayashStore.Models;
-using System.Data.Entity;
+using PrayashStore.Services.Interfaces;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -9,17 +9,15 @@ namespace PrayashStore.Controllers
     [Authorize(Roles = "CanManageProducts,Admin")]
     public class CategoryController : Controller
     {
-
-        private readonly ApplicationDbContext _context;
-        public CategoryController(ApplicationDbContext context)
+        private readonly ICategoryService _categoryService;
+        public CategoryController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         public ActionResult Index()
         {
-            var categories = _context.Categories.ToList();
-            return View(categories);
+            return View(_categoryService.GetAllCategories());
         }
 
         [Authorize]
@@ -35,14 +33,12 @@ namespace PrayashStore.Controllers
             if (!ModelState.IsValid)
                 return View(category);
 
-            if (_context.Categories.Any(a => a.Name == category.Name))
+            if (_categoryService.GetAllCategories().Any(x => x.Name == category.Name))
             {
                 ModelState.AddModelError("Name", "Cannot create category with duplicate name");
                 return View(category);
             }
-
-            _context.Categories.Add(category);
-            _context.SaveChanges();
+            _categoryService.AddCategory(category);
 
             return RedirectToAction("Index");
         }
@@ -52,8 +48,7 @@ namespace PrayashStore.Controllers
             if (id == null)
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-
-            var category = _context.Categories.Find(id);
+            var category = _categoryService.GetCategoryById(id.GetValueOrDefault());
             if (category == null)
                 return HttpNotFound();
 
@@ -67,8 +62,7 @@ namespace PrayashStore.Controllers
             if (!ModelState.IsValid)
                 return View(category);
 
-            _context.Entry(category).State = EntityState.Modified;
-            _context.SaveChanges();
+            _categoryService.EditCategory(category);
             return RedirectToAction("Index");
         }
 
@@ -79,10 +73,8 @@ namespace PrayashStore.Controllers
             if (!ModelState.IsValid)
                 return Json(new { success = false, message = "Category delete failed" });
 
-            var category = _context.Categories.Find(id);
-
-            _context.Categories.Remove(category);
-            _context.SaveChanges();
+            var category = _categoryService.GetCategoryById(id);
+            _categoryService.RemoveCategory(category);
 
             return Json(new { success = true, message = $"Category: {category.Name} has been sucessfully deleted" });
         }

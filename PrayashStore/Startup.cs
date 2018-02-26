@@ -6,6 +6,12 @@ using Microsoft.Owin;
 using Microsoft.Owin.Security.DataProtection;
 using Owin;
 using PrayashStore.Models;
+using PrayashStore.Repositories;
+using PrayashStore.Repositories.Interfaces;
+using PrayashStore.Services;
+using PrayashStore.Services.Interfaces;
+using PrayashStore.UOW;
+using PrayashStore.UOW.Interfaces;
 using System.Web;
 using System.Web.Mvc;
 
@@ -19,6 +25,14 @@ namespace PrayashStore
             var builder = new ContainerBuilder();
 
             // REGISTER DEPENDENCIES
+            builder.RegisterType<UnitOfWork>().As<IUnitOfWork>().InstancePerLifetimeScope();
+            builder.RegisterGeneric(typeof(Repository<>)).As(typeof(IRepository<>));
+            builder.RegisterType<ProductService>().As<IProductService>().InstancePerRequest();
+            builder.RegisterType<CategoryService>().As<ICategoryService>().InstancePerRequest();
+            builder.RegisterType<CartService>().As<ICartService>().InstancePerRequest();
+            builder.RegisterType<ProductImageService>().As<IProductImageService>().InstancePerRequest();
+
+
             builder.RegisterType<ApplicationDbContext>().AsSelf().InstancePerRequest();
             builder.RegisterType<ApplicationUserStore>().As<IUserStore<ApplicationUser>>().InstancePerRequest();
             builder.RegisterType<RoleStore<IdentityRole>>().As<IRoleStore<IdentityRole, string>>().InstancePerRequest();
