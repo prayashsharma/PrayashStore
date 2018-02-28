@@ -1,11 +1,10 @@
 ﻿using PrayashStore.Constants;
 using PrayashStore.Extensions;
-using PrayashStore.Helpers;
 using PrayashStore.Models;
+using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -17,53 +16,47 @@ namespace PrayashStore.Controllers
     [Authorize(Roles = "CanManageProducts,Admin")]
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
+        private readonly ICartService _cartService;
+        private readonly IProductImageService _productImageService;
 
-        public ProductController(ApplicationDbContext context)
+        public ProductController(IProductService productService, ICategoryService categoryService,
+            ICartService cartService, IProductImageService productImageService)
         {
-            _context = context;
+            _productService = productService;
+            _categoryService = categoryService;
+            _cartService = cartService;
+            _productImageService = productImageService;
         }
         public ActionResult Index(string categoryName, string gender)
         {
-            ViewBag.Categories = _context.Categories.Select(x => x.Name).ToList();
+            ViewBag.Categories = _categoryService.GetAllCategories().Select(x => x.Name).ToList();
             ViewBag.Genders = Enum.GetNames(typeof(Gender));
 
             var products = new List<Product>();
 
             if (string.IsNullOrWhiteSpace(categoryName) && string.IsNullOrWhiteSpace(gender))
             {
-                products = _context.Products
-                    .Include(c => c.Category)
-                    .ToList();
+                products = _productService.GetAllProducts().ToList();
                 return View(products);
             }
 
             if (!string.IsNullOrWhiteSpace(categoryName) && !string.IsNullOrWhiteSpace(gender))
             {
-                Gender genderEnum = (Gender)Enum.Parse(typeof(Gender), gender);
-                products = _context.Products
-                 .Include(c => c.Category)
-                 .Where(x => x.Gender == genderEnum && x.Category.Name == categoryName)
-                 .ToList();
+                products = _productService.GetAllProductsByCategoryNameAndGender(categoryName, gender).ToList();
                 return View(products);
             }
 
             if (string.IsNullOrWhiteSpace(categoryName))
             {
-                Gender genderEnum = (Gender)Enum.Parse(typeof(Gender), gender);
-                products = _context.Products
-                    .Include(c => c.Category)
-                    .Where(x => x.Gender == genderEnum)
-                    .ToList();
+                products = _productService.GetAllProductsByGender(gender).ToList();
                 return View(products);
-
             }
+
             if (string.IsNullOrWhiteSpace(gender))
             {
-                products = _context.Products
-                    .Include(c => c.Category)
-                    .Where(x => x.Category.Name == categoryName)
-                    .ToList();
+                products = _productService.GetAllProductsByCategoryName(categoryName).ToList();
                 return View(products);
             }
 
@@ -73,18 +66,13 @@ namespace PrayashStore.Controllers
         public ActionResult Details(int? id)
         {
             if (id == null)
-            {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
 
-            Product product = _context.Products.Find(id);
+            var product = _productService.GetProductById(id.GetValueOrDefault());
             if (product == null)
                 return HttpNotFound();
 
-
-            var cart = ShoppingCartHelper.GetCart(_context, HttpContext);
-
-            var cartItem = cart.GetCartItems().Single(x => x.ProductId == product.Id);
+            var cartItem = _cartService.GetCartItems().SingleOrDefault(x => x.ProductId == product.Id);
 
             var productDetailViewModel = new ProductDetailViewModel
             {
@@ -94,8 +82,8 @@ namespace PrayashStore.Controllers
                 Price = product.Price.ToString(),
                 Gender = product.Gender,
                 Category = product.Category,
-                ProductImages = _context.ProductImages.Where(x => x.ProductId == id).ToList(),
-                CartItemCount = cart.GetItemCount(product.Id),
+                ProductImages = _productImageService.GetAllImagesByProductId(product.Id),
+                CartItemCount = _cartService.GetItemCount(product.Id),
                 CartItemRecordId = cartItem.RecordId
             };
             return View(productDetailViewModel);
@@ -105,7 +93,7 @@ namespace PrayashStore.Controllers
         {
             var productAddFormViewModel = new ProductAddFormViewModel
             {
-                Categories = _context.Categories.ToList()
+                Categories = _categoryService.GetAllCategories()
             };
             return View(productAddFormViewModel);
         }
@@ -117,7 +105,7 @@ namespace PrayashStore.Controllers
 
             if (!ModelState.IsValid)
             {
-                productAddFormViewModel.Categories = _context.Categories.ToList();
+                productAddFormViewModel.Categories = _categoryService.GetAllCategories();
                 return View(productAddFormViewModel);
             }
 
@@ -165,10 +153,7 @@ namespace PrayashStore.Controllers
                 }
                 product.ProductImages = imageList;
             }
-
-            _context.Products.Add(product);
-            _context.SaveChanges();
-
+            _productService.AddProduct(product);
             return RedirectToAction("Index");
         }
 
@@ -177,8 +162,7 @@ namespace PrayashStore.Controllers
             if (id == null)
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-
-            Product product = _context.Products.Find(id);
+            var product = _productService.GetProductById(id.GetValueOrDefault());
             if (product == null)
                 return HttpNotFound();
 
@@ -190,8 +174,8 @@ namespace PrayashStore.Controllers
                 Description = product.Description,
                 Price = product.Price.ToString(),
                 Gender = product.Gender,
-                Categories = _context.Categories.ToList(),
-                ProductImages = _context.ProductImages.Where(x => x.ProductId == id).ToList()
+                Categories = _categoryService.GetAllCategories(),
+                ProductImages = _productImageService.GetAllImagesByProductId(id.GetValueOrDefault())
             };
             return View(productEditFormViewModel);
         }
@@ -202,14 +186,12 @@ namespace PrayashStore.Controllers
         {
             if (!ModelState.IsValid)
             {
-                productEditFormViewModel.ProductImages = _context.ProductImages
-                                                            .Where(x => x.ProductId == productEditFormViewModel.Id)
-                                                            .ToList();
-                productEditFormViewModel.Categories = _context.Categories.ToList();
+                productEditFormViewModel.ProductImages = _productImageService.GetAllImagesByProductId(productEditFormViewModel.Id);
+                productEditFormViewModel.Categories = _categoryService.GetAllCategories();
                 return View(productEditFormViewModel);
             }
 
-            var product = _context.Products.Find(productEditFormViewModel.Id);
+            var product = _productService.GetProductById(productEditFormViewModel.Id);
 
             product.Id = productEditFormViewModel.Id;
             product.Name = productEditFormViewModel.Name;
@@ -229,10 +211,8 @@ namespace PrayashStore.Controllers
                 }
             }
 
-            _context.Entry(product).State = EntityState.Modified;
-            _context.SaveChanges();
+            _productService.EditProduct(product);
             return RedirectToAction("Index");
-
         }
 
         public ActionResult Delete(int? id)
@@ -240,7 +220,7 @@ namespace PrayashStore.Controllers
             if (id == null)
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-            var product = _context.Products.Include(x => x.Category).SingleOrDefault(x => x.Id == id);
+            var product = _productService.GetProductWithCategory(id.GetValueOrDefault());
             if (product == null)
                 return HttpNotFound();
 
@@ -263,14 +243,9 @@ namespace PrayashStore.Controllers
             if (!ModelState.IsValid)
                 return View();
 
-            var product = _context.Products.Find(id);
-
-            _context.Products.Remove(product);
-            _context.SaveChanges();
-
+            var product = _productService.GetProductById(id);
+            _productService.RemoveProduct(product);
             return RedirectToAction("Index");
         }
-
-
     }
 }

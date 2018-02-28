@@ -198,8 +198,7 @@
 
             // Show elements when Add button is clicked
             $('body').on('click', '#add-image-btn', function (event) {
-                event.preventDefault();
-                console.log("add button clicked");
+                event.preventDefault();                
                 $('#image-browse-section').show();
             });
 
@@ -231,8 +230,8 @@
                             data: { 'id': imageId },
                             dataType: 'json',
                             success: function (result) {
-                                if (!result.success) {
-                                    alert(result.message)
+                                if (!result.success) {                                    
+                                    ShowToast(result.message, 2500, 'error');
                                 }
                                 else {
                                     $('#images-section').load(GetUrlPath() + ' #image-modal-body-content');
@@ -280,8 +279,8 @@
                         data: fileData,
                         dataType: 'json',
                         success: function (result) {
-                            if (!result.success) {
-                                alert(result.message)
+                            if (!result.success) {                                
+                                ShowToast(result.message, 2500, 'error');
                             }
                             else {
                                 $('#images-section').load(GetUrlPath() + ' #image-modal-body-content');
