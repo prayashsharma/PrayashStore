@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.Identity;
 using PrayashStore.Models;
+using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -11,23 +12,23 @@ namespace PrayashStore.Controllers
     [Authorize]
     public class OrderController : Controller
     {
+        private ApplicationUserManager _userManager;
+        private readonly IOrderService _orderService;
         private readonly ApplicationDbContext _context;
 
-        public OrderController(ApplicationDbContext context)
+        public OrderController(ApplicationDbContext context, IOrderService orderService, ApplicationUserManager userManager)
         {
             _context = context;
+            _orderService = orderService;
+            _userManager = userManager;
         }
         public ActionResult History(OrderHistoryForOneUserViewModel model)
         {
             ViewBag.IdSortParm = String.IsNullOrEmpty(model.SortOrder) ? "id_desc" : "";
             ViewBag.DateSortParm = model.SortOrder == "date_asc" ? "date_desc" : "date_asc";
-
             ViewBag.SearchedOrderId = model.OrderId;
 
-            var userId = User.Identity.GetUserId();
-
-            IEnumerable<Order> orders = new List<Order>();
-            orders = _context.Orders.Where(x => x.ApplicationUserId == userId).ToList();
+            var orders = _orderService.GetAllOrdersForUser(User.Identity.GetUserId());
 
             if (model.OrderId != null)
             {
@@ -63,31 +64,40 @@ namespace PrayashStore.Controllers
             ViewBag.SelectedUserName = model.SelectedUserName;
             ViewBag.SearchedOrderId = model.OrderId;
 
-            model.UsersDropDownList = _context.Users.Select(s => new SelectListItem
+            model.UsersDropDownList = _userManager.Users.Select(s => new SelectListItem
             {
                 Value = s.UserName,
                 Text = s.UserName
             });
 
-            IEnumerable<Order> orders = new List<Order>();
+            var orders = new List<Order>();
+            string userId = null;
+
+            if (model.SelectedUserName != null)
+            {
+                userId = _userManager.FindByName(model.SelectedUserName).Id;
+            }
+
 
             if (string.IsNullOrWhiteSpace(model.SelectedUserName) && model.OrderId == null)
             {
-                orders = _context.Orders.ToList();
+                orders = _orderService.GetAllOrders().ToList();
             }
-            else if (string.IsNullOrWhiteSpace(model.SelectedUserName))
+            else if (string.IsNullOrWhiteSpace(userId))
             {
-                orders = _context.Orders.Where(o => o.Id == model.OrderId).ToList();
+                var order = _orderService.GetOrderByOrderId(model.OrderId.GetValueOrDefault());
+                if (order != null)
+                    orders.Add(order);
             }
             else if (model.OrderId == null)
             {
-                orders = _context.Orders.Where(o => o.ApplicationUser.UserName == model.SelectedUserName).ToList();
+                orders = _orderService.GetAllOrdersForUser(userId).ToList();
             }
             else
             {
-                orders = _context.Orders
-                    .Where(o => o.ApplicationUser.UserName == model.SelectedUserName && o.Id == model.OrderId)
-                    .ToList();
+                var order = _orderService.GetOrderbyOrderIdForUser(model.OrderId.GetValueOrDefault(), userId);
+                if (order != null)
+                    orders.Add(order);
             }
 
             switch (model.SortOrder)
@@ -118,7 +128,7 @@ namespace PrayashStore.Controllers
 
         public ActionResult Detail(int id)
         {
-            var model = _context.OrderDetails.Where(x => x.OrderId == id).ToList();
+            var model = _orderService.GetOrderDetails(id);
             return View(model);
 
         }

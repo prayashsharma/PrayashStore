@@ -31,6 +31,8 @@ namespace PrayashStore
             builder.RegisterType<CategoryService>().As<ICategoryService>().InstancePerRequest();
             builder.RegisterType<CartService>().As<ICartService>().InstancePerRequest();
             builder.RegisterType<ProductImageService>().As<IProductImageService>().InstancePerRequest();
+            builder.RegisterType<AddressService>().As<IAddressService>().InstancePerRequest();
+            builder.RegisterType<OrderService>().As<IOrderService>().InstancePerRequest();
 
 
             builder.RegisterType<ApplicationDbContext>().AsSelf().InstancePerRequest();

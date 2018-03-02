@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNet.Identity;
 using PrayashStore.Constants;
-using PrayashStore.Helpers;
 using PrayashStore.Models;
+using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
-using System;
-using System.Linq;
 using System.Web.Mvc;
 
 namespace PrayashStore.Controllers
@@ -12,19 +10,21 @@ namespace PrayashStore.Controllers
     [Authorize]
     public class CheckOutController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAddressService _addressService;
+        private readonly ICartService _cartService;
+        private readonly IOrderService _orderService;
 
-        public CheckOutController(ApplicationDbContext context)
+        public CheckOutController(IAddressService addressService, ICartService cartService, IOrderService orderService)
         {
-            _context = context;
+            _addressService = addressService;
+            _cartService = cartService;
+            _orderService = orderService;
         }
         public ActionResult Address()
         {
             var applicationUserId = User.Identity.GetUserId();
-            var currentShippingAddress = _context.Addresses
-                .SingleOrDefault(x => x.Type == AddressType.Shipping && x.ApplicationUserId == applicationUserId);
-            var currentBillingAddress = _context.Addresses
-                 .SingleOrDefault(x => x.Type == AddressType.Billing && x.ApplicationUserId == applicationUserId);
+            var currentShippingAddress = _addressService.GetCustomerAddress(AddressType.Shipping, applicationUserId);
+            var currentBillingAddress = _addressService.GetCustomerAddress(AddressType.Billing, applicationUserId);
 
             var addressUpdateViewModel = new AddressUpdateViewModel();
 
@@ -62,81 +62,43 @@ namespace PrayashStore.Controllers
 
             var applicationUserId = User.Identity.GetUserId();
 
-            // Get the current shipping address for this user
-            var currentShippingAddress = _context.Addresses
-                .SingleOrDefault(x => x.Type == AddressType.Shipping && x.ApplicationUserId == applicationUserId);
-
-            if (currentShippingAddress == null)
+            var shippingAddress = new Address
             {
-                var shippingAddress = new Address
-                {
-                    Type = AddressType.Shipping,
-                    Attn = model.ShippingAddress.Attn,
-                    Line1 = model.ShippingAddress.Line1,
-                    Line2 = model.ShippingAddress.Line2,
-                    City = model.ShippingAddress.City,
-                    State = model.ShippingAddress.State,
-                    ZipCode = model.ShippingAddress.ZipCode,
-                    Country = model.ShippingAddress.Country,
-                    ApplicationUserId = applicationUserId,
-                };
-                _context.Addresses.Add(shippingAddress);
-            }
-            else
+                Type = AddressType.Shipping,
+                Attn = model.ShippingAddress.Attn,
+                Line1 = model.ShippingAddress.Line1,
+                Line2 = model.ShippingAddress.Line2,
+                City = model.ShippingAddress.City,
+                State = model.ShippingAddress.State,
+                ZipCode = model.ShippingAddress.ZipCode,
+                Country = model.ShippingAddress.Country,
+                ApplicationUserId = applicationUserId,
+            };
+
+            var billingAddress = new Address
             {
-                currentShippingAddress.Attn = model.ShippingAddress.Attn;
-                currentShippingAddress.Line1 = model.ShippingAddress.Line1;
-                currentShippingAddress.Line2 = model.ShippingAddress.Line2;
-                currentShippingAddress.City = model.ShippingAddress.City;
-                currentShippingAddress.State = model.ShippingAddress.State;
-                currentShippingAddress.ZipCode = model.ShippingAddress.ZipCode;
-                currentShippingAddress.Country = model.ShippingAddress.Country;
-            }
+                Type = AddressType.Billing,
+                Attn = model.BillingAddress.Attn,
+                Line1 = model.BillingAddress.Line1,
+                Line2 = model.BillingAddress.Line2,
+                City = model.BillingAddress.City,
+                State = model.BillingAddress.State,
+                ZipCode = model.BillingAddress.ZipCode,
+                Country = model.BillingAddress.Country,
+                ApplicationUserId = applicationUserId,
+            };
 
-            // Get the current billing address for this user
-            var currentBillingAddress = _context.Addresses
-                .SingleOrDefault(x => x.Type == AddressType.Billing && x.ApplicationUserId == applicationUserId);
-
-            if (currentBillingAddress == null)
-            {
-                var billingAddress = new Address
-                {
-                    Type = AddressType.Billing,
-                    Attn = model.BillingAddress.Attn,
-                    Line1 = model.BillingAddress.Line1,
-                    Line2 = model.BillingAddress.Line2,
-                    City = model.BillingAddress.City,
-                    State = model.BillingAddress.State,
-                    ZipCode = model.BillingAddress.ZipCode,
-                    Country = model.BillingAddress.Country,
-                    ApplicationUserId = applicationUserId,
-                };
-                _context.Addresses.Add(billingAddress);
-            }
-            else
-            {
-                currentBillingAddress.Attn = model.BillingAddress.Attn;
-                currentBillingAddress.Line1 = model.BillingAddress.Line1;
-                currentBillingAddress.Line2 = model.BillingAddress.Line2;
-                currentBillingAddress.City = model.BillingAddress.City;
-                currentBillingAddress.State = model.BillingAddress.State;
-                currentBillingAddress.ZipCode = model.BillingAddress.ZipCode;
-                currentBillingAddress.Country = model.BillingAddress.Country;
-            }
-
-            _context.SaveChanges();
-
+            _addressService.UpdateAddress(billingAddress, shippingAddress, applicationUserId);
             return RedirectToAction("Payment");
         }
 
         public ActionResult Payment()
         {
             var applicationUserId = User.Identity.GetUserId();
-            var currentShippingAddress = _context.Addresses
-                .SingleOrDefault(x => x.Type == AddressType.Shipping && x.ApplicationUserId == applicationUserId);
-            var currentBillingAddress = _context.Addresses
-                 .SingleOrDefault(x => x.Type == AddressType.Billing && x.ApplicationUserId == applicationUserId);
-            var cart = ShoppingCartHelper.GetCart(_context, HttpContext);
+            var currentShippingAddress = _addressService.GetCustomerAddress(AddressType.Shipping, applicationUserId);
+            var currentBillingAddress = _addressService.GetCustomerAddress(AddressType.Billing, applicationUserId);
+
+
             var model = new ReviewOrderViewModel();
 
             if (currentBillingAddress != null)
@@ -161,9 +123,9 @@ namespace PrayashStore.Controllers
                 model.ShippingAddress.Country = currentShippingAddress.Country;
             }
 
-            model.CartItems = cart.GetCartItems();
-            model.CartTotal = string.Format("{0:F}", cart.GetTotal());
-            model.CartCount = cart.GetCount();
+            model.CartItems = _cartService.GetCartItems();
+            model.CartTotal = string.Format("{0:F}", _cartService.GetTotal());
+            model.CartCount = _cartService.GetCount();
 
             return View(model);
         }
@@ -178,83 +140,24 @@ namespace PrayashStore.Controllers
                 return View(reviewOrderViewModel);
             }
 
-            var order = new Order();
-            //TryUpdateModel(order);
+            var orderId = _orderService.ProcessOrder(_cartService, User.Identity.GetUserId());
 
-            try
+            if (orderId == 0)
             {
-                //Get Shopping cart
-                var cart = ShoppingCartHelper.GetCart(_context, this.HttpContext);
-
-                //create order
-                order.ApplicationUserId = User.Identity.GetUserId();
-                order.Total = cart.GetTotal();
-                order.DateCreated = DateTime.Now;
-
-                //Save Order
-                _context.Orders.Add(order);
-                _context.SaveChanges();
-
-                //create Order details                
-                CreateOrderDetails(order, cart);
-
-                // Empty the shopping cart
-                cart.EmptyCart();
-
-                return RedirectToAction("Complete",
-                    new { id = order.Id });
-            }
-            catch (Exception e)
-            {
-                //Invalid - redisplay with errors
-                ModelState.AddModelError("", "Order processing failed " + e.Message);
-                return View(order);
+                ModelState.AddModelError("", "Order processing failed ");
+                return View(reviewOrderViewModel);
             }
 
+            return RedirectToAction("Complete", new { id = orderId });
         }
 
         public ActionResult Complete(int id)
         {
-            // Validate customer owns this order
-
-            var userId = User.Identity.GetUserId();
-            bool isValid = _context.Orders.Any(
-                o => o.Id == id &&
-                o.ApplicationUserId == userId);
-
-            if (isValid)
-            {
-                return View(id);
-            }
-            else
-            {
+            var newOrder = _orderService.GetOrderbyOrderIdForUser(id, User.Identity.GetUserId());
+            if (newOrder == null)
                 return View("Error");
-            }
+
+            return View(newOrder.Id);
         }
-
-        private void CreateOrderDetails(Order order, ShoppingCartHelper cart)
-        {
-            var cartItems = cart.GetCartItems();
-            // Iterate over the items in the cart, 
-            // adding the order details for each
-            foreach (var item in cartItems)
-            {
-                var orderDetail = new OrderDetail
-                {
-                    ProductId = item.ProductId,
-                    OrderId = order.Id,
-                    UnitPrice = item.Product.Price,
-                    Quantity = item.Count
-                };
-
-                _context.OrderDetails.Add(orderDetail);
-
-            }
-
-            // Save the order
-            _context.SaveChanges();
-
-        }
-
     }
 }
