@@ -235,7 +235,6 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\ShoppingCartHelper.cs" />
     <Compile Include="Migrations\201709201814278_InitialMigration.cs" />
     <Compile Include="Migrations\201709201814278_InitialMigration.Designer.cs">
       <DependentUpon>201709201814278_InitialMigration.cs</DependentUpon>
