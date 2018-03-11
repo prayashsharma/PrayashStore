@@ -2,7 +2,9 @@
 using PrayashStore.Repositories.Interfaces;
 using PrayashStore.Services.Interfaces;
 using PrayashStore.UOW.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PrayashStore.Services
 {
@@ -32,6 +34,9 @@ namespace PrayashStore.Services
 
         public void AddCategory(Category category)
         {
+            if (GetAllCategories().Any(x => x.Name == category.Name))
+                throw new InvalidOperationException("Duplicate Category Name.");
+
             CategoryRepository.Add(category);
             UnitOfWork.Complete();
         }

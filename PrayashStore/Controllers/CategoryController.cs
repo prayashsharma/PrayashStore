@@ -1,6 +1,6 @@
 ﻿using PrayashStore.Models;
 using PrayashStore.Services.Interfaces;
-using System.Linq;
+using System;
 using System.Net;
 using System.Web.Mvc;
 
@@ -30,21 +30,25 @@ namespace PrayashStore.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Category category)
         {
-            if (!ModelState.IsValid)
-                return View(category);
-
-            if (_categoryService.GetAllCategories().Any(x => x.Name == category.Name))
+            try
             {
-                ModelState.AddModelError("Name", "Cannot create category with duplicate name");
+                if (!ModelState.IsValid)
+                    return View(category);
+
+                _categoryService.AddCategory(category);
+                return RedirectToAction("Index");
+
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
                 return View(category);
             }
-            _categoryService.AddCategory(category);
-
-            return RedirectToAction("Index");
         }
 
         public ActionResult Edit(int? id)
         {
+
             if (id == null)
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
