@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using PrayashStore.App_Start;
+using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 
@@ -12,6 +13,7 @@ namespace PrayashStore
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+            AutoMapperConfig.Configure();
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
     }
