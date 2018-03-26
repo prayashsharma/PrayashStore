@@ -1,4 +1,5 @@
-﻿using PrayashStore.Models;
+﻿using AutoMapper;
+using PrayashStore.Models;
 using PrayashStore.Services.Interfaces;
 using PrayashStore.ViewModels;
 using System;
@@ -63,18 +64,20 @@ namespace PrayashStore.Controllers
                 return View("Error");
 
             var cartItem = _cartService.GetCartItems().SingleOrDefault(x => x.ProductId == product.Id);
-            var productDetailViewModel = new ProductDetailViewModel
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price.ToString(),
-                Gender = product.Gender,
-                Category = product.Category,
-                ProductImages = _productImageService.GetAllImagesByProductId(product.Id),
-                CartItemCount = _cartService.GetItemCount(product.Id),
-                CartItemRecordId = cartItem?.RecordId ?? 0
-            };
+
+            // Can also be mapped this way ---<
+            //var productDetailViewModel = Mapper.Map<Product, ProductDetailViewModel>(product, opts =>
+            //{
+            //    opts.Items["CartItemCount"] = _cartService.GetItemCount(product.Id);
+            //    opts.Items["ProductImages"] = _productImageService.GetAllImagesByProductId(product.Id);
+            //    opts.Items["CartItemRecordId"] = cartItem?.RecordId ?? 0;
+            //}); //------>
+
+            var productDetailViewModel = Mapper.Map<ProductDetailViewModel>(product);
+            productDetailViewModel.CartItemCount = _cartService.GetItemCount(product.Id);
+            productDetailViewModel.ProductImages = _productImageService.GetAllImagesByProductId(product.Id);
+            productDetailViewModel.CartItemRecordId = cartItem?.RecordId ?? 0;
+
             return View(productDetailViewModel);
         }
 

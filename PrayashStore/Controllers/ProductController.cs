@@ -1,4 +1,5 @@
-﻿using PrayashStore.Constants;
+﻿using AutoMapper;
+using PrayashStore.Constants;
 using PrayashStore.Extensions;
 using PrayashStore.Models;
 using PrayashStore.Services.Interfaces;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -63,32 +65,6 @@ namespace PrayashStore.Controllers
             return View(products);
         }
 
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-
-            var product = _productService.GetProductById(id.GetValueOrDefault());
-            if (product == null)
-                return HttpNotFound();
-
-            var cartItem = _cartService.GetCartItems().SingleOrDefault(x => x.ProductId == product.Id);
-
-            var productDetailViewModel = new ProductDetailViewModel
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price.ToString(),
-                Gender = product.Gender,
-                Category = product.Category,
-                ProductImages = _productImageService.GetAllImagesByProductId(product.Id),
-                CartItemCount = _cartService.GetItemCount(product.Id),
-                CartItemRecordId = cartItem.RecordId
-            };
-            return View(productDetailViewModel);
-        }
-
         public ActionResult Create()
         {
             var productAddFormViewModel = new ProductAddFormViewModel
@@ -109,24 +85,12 @@ namespace PrayashStore.Controllers
                 return View(productAddFormViewModel);
             }
 
-            var product = new Product
-            {
-                Name = productAddFormViewModel.Name,
-                Gender = productAddFormViewModel.Gender,
-                Description = productAddFormViewModel.Description,
-                Price = decimal.Parse(productAddFormViewModel.Price),
-                CategoryId = productAddFormViewModel.Category
-            };
+            var product = Mapper.Map<Product>(productAddFormViewModel);
 
             if (productAddFormViewModel.Thumbnail != null)
             {
-                using (Image img = Image.FromStream(productAddFormViewModel.Thumbnail.InputStream))
-                {
-                    var data = img.Resize(ImageSizeConstant.ProductThumbnailWidth, ImageSizeConstant.ProductThumbnailHeight)
-                                  .ToByteArray(ImageFormat.Jpeg);
-
-                    product.Thumbnail = data;
-                }
+                product.Thumbnail = ProcessImage("thumbnail", productAddFormViewModel.Thumbnail.InputStream,
+                                                    ImageSizeConstant.ProductThumbnailHeight, ImageSizeConstant.ProductThumbnailWidth);
             }
 
 
@@ -137,18 +101,14 @@ namespace PrayashStore.Controllers
                 {
                     if (image != null)
                     {
-                        using (Image img = Image.FromStream(image.InputStream))
+                        var productImage = new ProductImage
                         {
-                            var data = img.Resize(ImageSizeConstant.ProductImageWidth, ImageSizeConstant.ProductImageHeight)
-                                          .ToByteArray(ImageFormat.Jpeg);
-                            var productImage = new ProductImage
-                            {
-                                ProductId = product.Id,
-                                ImageData = data
-                            };
+                            ProductId = product.Id,
+                            ImageData = ProcessImage("image", image.InputStream,
+                                                        ImageSizeConstant.ProductImageHeight, ImageSizeConstant.ProductImageWidth)
+                        };
 
-                            imageList.Add(productImage);
-                        }
+                        imageList.Add(productImage);
                     }
                 }
                 product.ProductImages = imageList;
@@ -166,17 +126,10 @@ namespace PrayashStore.Controllers
             if (product == null)
                 return HttpNotFound();
 
-            var productEditFormViewModel = new ProductEditFormViewModel
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Category = product.CategoryId,
-                Description = product.Description,
-                Price = product.Price.ToString(),
-                Gender = product.Gender,
-                Categories = _categoryService.GetAllCategories(),
-                ProductImages = _productImageService.GetAllImagesByProductId(id.GetValueOrDefault())
-            };
+            var productEditFormViewModel = Mapper.Map<ProductEditFormViewModel>(product);
+            productEditFormViewModel.Categories = _categoryService.GetAllCategories();
+            productEditFormViewModel.ProductImages = _productImageService.GetAllImagesByProductId(id.GetValueOrDefault());
+
             return View(productEditFormViewModel);
         }
 
@@ -184,31 +137,24 @@ namespace PrayashStore.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(ProductEditFormViewModel productEditFormViewModel)
         {
-            if (!ModelState.IsValid)
+            var originalProduct = _productService.GetProductById(productEditFormViewModel.Id);
+            if (!ModelState.IsValid || originalProduct == null)
             {
                 productEditFormViewModel.ProductImages = _productImageService.GetAllImagesByProductId(productEditFormViewModel.Id);
                 productEditFormViewModel.Categories = _categoryService.GetAllCategories();
                 return View(productEditFormViewModel);
             }
 
-            var product = _productService.GetProductById(productEditFormViewModel.Id);
-
-            product.Id = productEditFormViewModel.Id;
-            product.Name = productEditFormViewModel.Name;
-            product.Gender = productEditFormViewModel.Gender;
-            product.Description = productEditFormViewModel.Description;
-            product.Price = decimal.Parse(productEditFormViewModel.Price);
-            product.CategoryId = productEditFormViewModel.Category;
+            var product = Mapper.Map<Product>(productEditFormViewModel);
 
             if (productEditFormViewModel.Thumbnail != null)
             {
-                using (Image img = Image.FromStream(productEditFormViewModel.Thumbnail.InputStream))
-                {
-                    var data = img.Resize(ImageSizeConstant.ProductThumbnailWidth, ImageSizeConstant.ProductThumbnailHeight)
-                                    .ToByteArray(ImageFormat.Png);
-
-                    product.Thumbnail = data;
-                }
+                product.Thumbnail = ProcessImage("thumbnail", productEditFormViewModel.Thumbnail.InputStream,
+                                                    ImageSizeConstant.ProductThumbnailHeight, ImageSizeConstant.ProductThumbnailWidth);
+            }
+            else
+            {
+                product.Thumbnail = originalProduct.Thumbnail;
             }
 
             _productService.EditProduct(product);
@@ -224,15 +170,7 @@ namespace PrayashStore.Controllers
             if (product == null)
                 return HttpNotFound();
 
-            var productDetailViewModel = new ProductDetailViewModel
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Category = product.Category,
-                Description = product.Description,
-                Price = product.Price.ToString(),
-                Gender = product.Gender
-            };
+            var productDetailViewModel = Mapper.Map<ProductDetailViewModel>(product);
             return View(productDetailViewModel);
         }
 
@@ -247,5 +185,17 @@ namespace PrayashStore.Controllers
             _productService.RemoveProduct(product);
             return RedirectToAction("Index");
         }
+
+        private byte[] ProcessImage(string imageType, Stream imageStream, int height = 250, int width = 250)
+        {
+            using (Image img = Image.FromStream(imageStream))
+            {
+                var data = img.Resize(width, height)
+                                .ToByteArray(ImageFormat.Png);
+                return data;
+            }
+
+        }
+
     }
 }
