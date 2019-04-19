@@ -1,5 +1,7 @@
 # PrayashStore
 
+http://prayashstore.azurewebsites.net
+
 This is a simple fictional ecommerce full stack application. It was created in ASP.NET 4.5 framework using the following: C#, Javascript, CSS, HTML. This application uses Model-View-Controller (MVC) as an architectural patten and Entity Framework as the object-relational mapper. 
 This application also utilizes the following:
 
